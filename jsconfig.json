@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "checkJs": true,
+        "lib": [
+            "es2023"
+        ],
+        "downlevelIteration": true,
+    },
+    "include": [
+        "src/*.js"
+    ]
+}
