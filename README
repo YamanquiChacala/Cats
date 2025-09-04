@@ -1,11 +1,45 @@
-## Useful links
+## Ligas útiles
 
 - [Google Cloud](https://console.cloud.google.com/)
-- [Workspace Add-on](https://developers.google.com/workspace/add-ons/quickstart/cats-quickstart)
+- [Tutorial de Google](https://developers.google.com/workspace/add-ons/quickstart/cats-quickstart)
 
 
-## Google Could project setup
+## Publish process:
 
-- Crear proyecto
-- APIs y servicios > Pantalla de consentimiento de OAuth
-- Desarrollo de la marca (Branding)
+1. Crear proyecto de [Google Script](https://script.google.com/home)
+2. Crear proyecto de [Google Cloud project](https://console.cloud.google.com/)
+    - Ir a `APIs y Servicios > Pantalla de consentimiento de OAuth`
+    - Llenar la información para aplicación interna
+3. Escribir el código en Google Script
+    - Modificar `appscript.json` adecuadamente.
+4. Copiar el número del proyecto de Google Cloud
+    - Ir a `IAM y administración > Configuración`
+5. Cambiar el proyecto de Google a GCP
+    - Ir a la `Configuración del proyecto`
+    - `Cambiar de proyecto`
+    - Pegar el número del proyecto de Google Cloud.
+    - Seleccionar `Mostrar el archivo de manifiesto "appscript.json" en el editor`
+6. Probar
+    - `Implementar > Implementaciones de prueba`.
+    - Tras ejecutar cualquier función, se pueden ver los ámbitos de OAuth en `Información general`
+7. Añadir ámbitos de OAuth a `appscript.json`, en el primer nivel:
+```
+{
+    ...
+    "oauthScopes": [
+        "https://www.googleapis.com/auth/drive.addons.metadata.readonly",
+        ...
+    ],
+    ...
+}
+```
+8. Implementar en `Google Script` como `Complemento`
+    - Copiar el `ID de Implementación`
+9. Habilitar API `Google Workspace Marketplace SDK`
+    - En `Configuración de la App`, seleccionar:
+        - `Privada`
+        - `Complemento de Google Workspace`
+        - `Apps Script`
+        - Pegar el `ID de Implementación`
+        - Copiar y pegar los Permisos de OAuth del `appscript.json`
+        
