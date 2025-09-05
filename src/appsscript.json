@@ -14,8 +14,8 @@
     "runtimeVersion": "V8",
     "addOns": {
       "common": {
-        "name": "Cats",
-        "logoUrl": "https://www.gstatic.com/images/icons/material/system/1x/pets_black_48dp.png",
+        "name": "Gatos",
+        "logoUrl": "https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/icon_48.png",
         "useLocaleFromApp": true,
         "homepageTrigger": {
           "runFunction": "onHomepage",
@@ -23,7 +23,7 @@
         },
         "universalActions": [
           {
-            "label": "Learn more about Cataas",
+            "label": "Acerca de Cataas",
             "openLink": "https://cataas.com"
           }
         ]
@@ -38,7 +38,7 @@
         "composeTrigger": {
           "selectActions": [
             {
-              "text": "Insert cat",
+              "text": "Insertar gato",
               "runFunction": "onGmailCompose"
             }
           ],

@@ -87,7 +87,7 @@ function createCatCard(text, isHomepage = false) {
         // are never used by non-contexual cards like homepages.
         const peekHeader = CardService.newCardHeader()
             .setTitle('Gato con contexto')
-            .setImageUrl('https://www.gstatic.com/images/icons/material/system/1x/pets_black_48dp.png')
+            .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/naranja_48.png')
             .setSubtitle(text);
         card.setPeekCardHeader(peekHeader)
     }
