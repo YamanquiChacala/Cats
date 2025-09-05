@@ -13,7 +13,7 @@
 /**
  * The maximum number of characters that can fit in the cat image.
  */
-var MAX_MESSAGE_LENGTH = 40;
+const MAX_MESSAGE_LENGTH = 40;
 
 /**
  * Callback for rendering the homepage card.
@@ -22,16 +22,16 @@ var MAX_MESSAGE_LENGTH = 40;
  */
 function onHomepage(e) {
     console.log(e);
-    var hour = Number(Utilities.formatDate(new Date(), e.userTimezone.id, 'H'));
-    var message;
+    const hour = Number(Utilities.formatDate(new Date(), e.userTimezone.id, 'H'));
+    let message;
     if (hour >= 6 && hour < 12) {
-        message = 'Good morning';
+        message = 'Buenos días';
     } else if (hour >= 12 && hour < 18) {
-        message = 'Good afternoon';
+        message = 'Buenas tardes';
     } else {
-        message = 'Good night';
+        message = 'Buenas noches';
     }
-    message += ' ' + e.hostApp;
+    message += ', ' + e.hostApp;
     return createCatCard(message, true);
 }
 
@@ -42,23 +42,17 @@ function onHomepage(e) {
  *      false otherwise. Defaults to false.
  * @return {GoogleAppsScript.Card_Service.Card} The assembled card.
  */
-function createCatCard(text, isHomepage) {
-    // Explicitly set the value of isHomepage as false if null or undefined.
-    if (!isHomepage) {
-        isHomepage = false;
-    }
-
+function createCatCard(text, isHomepage = false) {
     // Use the "Cat as a service" API to get the cat image. Add a "time" URL
     // parameter to act as a cache buster.
-    var now = new Date();
+    const now = new Date();
     // Replace forward slashes in the text, as they break the CataaS API.
-    var caption = text.replace(/\//g, ' ');
-    var imageUrl =
-        Utilities.formatString('https://cataas.com/cat/says/%s?time=%s',
-            encodeURIComponent(caption), now.getTime());
-    var image = CardService.newImage()
+    const caption = text.replace(/\//g, ' ');
+    const imageUrl =
+        Utilities.formatString('https://cataas.com/cat/says/%s?time=%s', encodeURIComponent(caption), now.getTime());
+    const image = CardService.newImage()
         .setImageUrl(imageUrl)
-        .setAltText('Meow')
+        .setAltText('Miau')
 
     // Create a button that changes the cat image when pressed.
     // Note: Action parameter keys and values must be strings.
