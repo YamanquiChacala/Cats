@@ -56,28 +56,28 @@ function createCatCard(text, isHomepage = false) {
 
     // Create a button that changes the cat image when pressed.
     // Note: Action parameter keys and values must be strings.
-    var action = CardService.newAction()
+    const action = CardService.newAction()
         .setFunctionName('onChangeCat')
         .setParameters({ text: text, isHomepage: isHomepage.toString() });
-    var button = CardService.newTextButton()
-        .setText('Change cat')
+    const button = CardService.newTextButton()
+        .setText('Nuevo gato')
         .setOnClickAction(action)
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED);
-    var buttonSet = CardService.newButtonSet()
+    const buttonSet = CardService.newButtonSet()
         .addButton(button);
 
     // Create a footer to be shown at the bottom.
-    var footer = CardService.newFixedFooter()
+    const footer = CardService.newFixedFooter()
         .setPrimaryButton(CardService.newTextButton()
-            .setText('Powered by cataas.com')
+            .setText('Maullando con cataas.com')
             .setOpenLink(CardService.newOpenLink()
                 .setUrl('https://cataas.com')));
 
     // Assemble the widgets and return the card.
-    var section = CardService.newCardSection()
+    const section = CardService.newCardSection()
         .addWidget(image)
         .addWidget(buttonSet);
-    var card = CardService.newCardBuilder()
+    const card = CardService.newCardBuilder()
         .addSection(section)
         .setFixedFooter(footer);
 
@@ -85,8 +85,8 @@ function createCatCard(text, isHomepage = false) {
         // Create the header shown when the card is minimized,
         // but only when this card is a contextual card. Peek headers
         // are never used by non-contexual cards like homepages.
-        var peekHeader = CardService.newCardHeader()
-            .setTitle('Contextual Cat')
+        const peekHeader = CardService.newCardHeader()
+            .setTitle('Gato con contexto')
             .setImageUrl('https://www.gstatic.com/images/icons/material/system/1x/pets_black_48dp.png')
             .setSubtitle(text);
         card.setPeekCardHeader(peekHeader)
@@ -106,19 +106,19 @@ function onChangeCat(e) {
     console.log(e);
     // Get the text that was shown in the current cat image. This was passed as a
     // parameter on the Action set for the button.
-    var text = e.parameters.text;
+    const text = e.parameters.text;
 
     // The isHomepage parameter is passed as a string, so convert to a Boolean.
-    var isHomepage = e.parameters.isHomepage === 'true';
+    const isHomepage = e.parameters.isHomepage === 'true';
 
     // Create a new card with the same text.
-    var card = createCatCard(text, isHomepage);
+    const card = createCatCard(text, isHomepage);
 
     // Create an action response that instructs the add-on to replace
     // the current card with the new one.
-    var navigation = CardService.newNavigation()
+    const navigation = CardService.newNavigation()
         .updateCard(card);
-    var actionResponse = CardService.newActionResponseBuilder()
+    const actionResponse = CardService.newActionResponseBuilder()
         .setNavigation(navigation);
     return actionResponse.build();
 }
@@ -131,7 +131,7 @@ function onChangeCat(e) {
 function truncate(message) {
     if (message.length > MAX_MESSAGE_LENGTH) {
         message = message.slice(0, MAX_MESSAGE_LENGTH);
-        message = message.slice(0, message.lastIndexOf(' ')) + '...';
+        message = message.slice(0, message.lastIndexOf(' ')) + '\n...';
     }
     return message;
 }
