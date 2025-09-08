@@ -61,20 +61,33 @@ function createCatCard(text, isHomepage = false) {
         .setParameters({ text: text, isHomepage: isHomepage.toString() });
     const button = CardService.newTextButton()
         .setText('Nuevo gato')
+        .setAltText('Gato escondido')
         .setOnClickAction(action)
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED);
+    const button2 = CardService.newImageButton()
+        .setAltText('Gato alterno')
+        .setIconUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/naranja_32.png')
+        .setOnClickAction(action);
     const buttonSet = CardService.newButtonSet()
-        .addButton(button);
+        .addButton(button)
+        .addButton(button2);
 
     // Create a footer to be shown at the bottom.
     const footer = CardService.newFixedFooter()
         .setPrimaryButton(CardService.newTextButton()
             .setText('Maullando con cataas.com')
             .setOpenLink(CardService.newOpenLink()
-                .setUrl('https://cataas.com')));
+                .setUrl('https://cataas.com')))
+        .setSecondaryButton(CardService.newTextButton()
+            .setText('Montessori School')
+            .setOpenLink(CardService.newOpenLink()
+                .setUrl('http://montessori.school')));
 
     // Assemble the widgets and return the card.
     const section = CardService.newCardSection()
+        .setHeader('¡Gato!')
+        .setCollapsible(true)
+        .setNumUncollapsibleWidgets(1)
         .addWidget(image)
         .addWidget(buttonSet);
     const card = CardService.newCardBuilder()
@@ -89,8 +102,15 @@ function createCatCard(text, isHomepage = false) {
             .setTitle('Gato con contexto')
             .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/naranja_48.png')
             .setSubtitle(text);
-        card.setPeekCardHeader(peekHeader)
+        card.setPeekCardHeader(peekHeader);
     }
+    const mainHeader = CardService.newCardHeader()
+        .setTitle('A ver el gato')
+        .setSubtitle('Gatos por todos lados')
+        .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/banner.png')
+        .setImageStyle(CardService.ImageStyle.CIRCLE);
+    card.setHeader(mainHeader);
+
 
     return card.build();
 }
