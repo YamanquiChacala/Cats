@@ -50,6 +50,13 @@ function createCatCard(text, isHomepage = false) {
     const caption = text.replace(/\//g, ' ');
     const imageUrl =
         Utilities.formatString('https://cataas.com/cat/says/%s?time=%s', encodeURIComponent(caption), now.getTime());
+    
+     const mainHeader = CardService.newCardHeader()
+        .setTitle('A ver el gato')
+        .setSubtitle('Gatos por todos lados')
+        .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/banner.png')
+        .setImageStyle(CardService.ImageStyle.CIRCLE);
+
     const image = CardService.newImage()
         .setImageUrl(imageUrl)
         .setAltText('Miau')
@@ -71,6 +78,20 @@ function createCatCard(text, isHomepage = false) {
     const buttonSet = CardService.newButtonSet()
         .addButton(button)
         .addButton(button2);
+    
+    const decoratedText = CardService.newDecoratedText()
+        .setText('Aquí un gato muy bonito, espero les guste')
+        .setTopLabel('¡Super!')
+        .setBottomLabel('Debajo')
+        .setWrapText(true)
+        .setStartIcon(CardService.newIconImage()
+            .setIconUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/naranja_32.png')
+            .setAltText('Gato naranja'))
+        .setOnClickAction(action)
+        .setSwitchControl(CardService.newSwitch()
+            .setFieldName('un switch')
+            .setValue('valor del switch')
+        );
 
     // Create a footer to be shown at the bottom.
     const footer = CardService.newFixedFooter()
@@ -87,10 +108,14 @@ function createCatCard(text, isHomepage = false) {
     const section = CardService.newCardSection()
         .setHeader('¡Gato!')
         .setCollapsible(true)
-        .setNumUncollapsibleWidgets(1)
+        .setNumUncollapsibleWidgets(3)
+        .addWidget(CardService.newDivider())
+        .addWidget(decoratedText)
         .addWidget(image)
         .addWidget(buttonSet);
+
     const card = CardService.newCardBuilder()
+        .setHeader(mainHeader)
         .addSection(section)
         .setFixedFooter(footer);
 
@@ -104,12 +129,6 @@ function createCatCard(text, isHomepage = false) {
             .setSubtitle(text);
         card.setPeekCardHeader(peekHeader);
     }
-    const mainHeader = CardService.newCardHeader()
-        .setTitle('A ver el gato')
-        .setSubtitle('Gatos por todos lados')
-        .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/banner.png')
-        .setImageStyle(CardService.ImageStyle.CIRCLE);
-    card.setHeader(mainHeader);
 
 
     return card.build();
