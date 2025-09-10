@@ -16,6 +16,12 @@
       "common": {
         "name": "Gatos",
         "logoUrl": "https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/icon_48.png",
+        "layoutProperties": {
+          "primaryColor": "#92e7ac"
+        },
+        "openLinkUrlPrefixes": [
+          "https://cataas.com/"
+        ],
         "useLocaleFromApp": true,
         "homepageTrigger": {
           "runFunction": "onHomepage",
@@ -55,5 +61,8 @@
           "runFunction": "onCalendarEventOpen"
         }
       }
-    }
-  }
+    },
+    "urlFetchWhitelist": [
+      "https://cataas.com/"
+    ]
+}

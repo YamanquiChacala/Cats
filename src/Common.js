@@ -52,9 +52,9 @@ function createCatCard(text, isHomepage = false) {
         Utilities.formatString('https://cataas.com/cat/says/%s?time=%s', encodeURIComponent(caption), now.getTime());
     
      const mainHeader = CardService.newCardHeader()
-        .setTitle('A ver el gato')
-        .setSubtitle('Gatos por todos lados')
-        .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/banner.png')
+        .setTitle('¡Aparece un gato!')
+        .setSubtitle('¿No es bonito?')
+        .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/icon_48.png')
         .setImageStyle(CardService.ImageStyle.CIRCLE);
 
     const image = CardService.newImage()
@@ -71,46 +71,18 @@ function createCatCard(text, isHomepage = false) {
         .setAltText('Gato escondido')
         .setOnClickAction(action)
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED);
-    const button2 = CardService.newImageButton()
-        .setAltText('Gato alterno')
-        .setIconUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/naranja_32.png')
-        .setOnClickAction(action);
     const buttonSet = CardService.newButtonSet()
-        .addButton(button)
-        .addButton(button2);
-    
-    const decoratedText = CardService.newDecoratedText()
-        .setText('Aquí un gato muy bonito, espero les guste')
-        .setTopLabel('¡Super!')
-        .setBottomLabel('Debajo')
-        .setWrapText(true)
-        .setStartIcon(CardService.newIconImage()
-            .setIconUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/naranja_32.png')
-            .setAltText('Gato naranja'))
-        .setOnClickAction(action)
-        .setSwitchControl(CardService.newSwitch()
-            .setFieldName('un switch')
-            .setValue('valor del switch')
-        );
-
+        .addButton(button);
     // Create a footer to be shown at the bottom.
     const footer = CardService.newFixedFooter()
         .setPrimaryButton(CardService.newTextButton()
             .setText('Maullando con cataas.com')
             .setOpenLink(CardService.newOpenLink()
                 .setUrl('https://cataas.com')))
-        .setSecondaryButton(CardService.newTextButton()
-            .setText('Montessori School')
-            .setOpenLink(CardService.newOpenLink()
-                .setUrl('http://montessori.school')));
+        .setSecondaryButton(CardService.newTextButton().setText('Otro').setOpenLink(CardService.newOpenLink().setUrl('www.google.com')));
 
     // Assemble the widgets and return the card.
     const section = CardService.newCardSection()
-        .setHeader('¡Gato!')
-        .setCollapsible(true)
-        .setNumUncollapsibleWidgets(3)
-        .addWidget(CardService.newDivider())
-        .addWidget(decoratedText)
         .addWidget(image)
         .addWidget(buttonSet);
 
