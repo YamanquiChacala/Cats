@@ -73,5 +73,7 @@ function onInsertCat() {
 function onFileScopeGrantedEditors(e) {
     console.log(e);
     const text = "Scope";
+    const menu = DocumentApp.getUi().createAddonMenu();
+    menu.addItem("Start workflow", "startWorkflow");
     return createCatCard(text);
 }
