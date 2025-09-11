@@ -3,14 +3,13 @@
     "dependencies": {},
     "exceptionLogging": "STACKDRIVER",
     "oauthScopes": [
+      "https://www.googleapis.com/auth/script.locale",
+      "https://www.googleapis.com/auth/drive.addons.metadata.readonly",
       "https://www.googleapis.com/auth/calendar.addons.execute",
       "https://www.googleapis.com/auth/calendar.readonly",
-      "https://www.googleapis.com/auth/drive.addons.metadata.readonly",
       "https://www.googleapis.com/auth/gmail.addons.current.action.compose",
-      "https://www.googleapis.com/auth/gmail.addons.current.message.readonly",
       "https://www.googleapis.com/auth/gmail.addons.execute",
-      "https://www.googleapis.com/auth/script.locale",
-      "https://www.googleapis.com/auth/documents.currentonly"
+      "https://www.googleapis.com/auth/drive.file"
     ],
     "runtimeVersion": "V8",
     "addOns": {
@@ -65,10 +64,13 @@
       "docs": {
         "homepageTrigger": {
           "runFunction": "onEditorHomepage"
+        },
+        "onFileScopeGrantedTrigger": {
+          "runFunction": "onFileScopeGrantedEditors"
         }
       }
     },
     "urlFetchWhitelist": [
       "https://cataas.com/"
     ]
-}
+  }

@@ -50,8 +50,8 @@ function createCatCard(text, isHomepage = false) {
     const caption = text.replace(/\//g, ' ');
     const imageUrl =
         Utilities.formatString('https://cataas.com/cat/says/%s?time=%s', encodeURIComponent(caption), now.getTime());
-    
-     const mainHeader = CardService.newCardHeader()
+
+    const mainHeader = CardService.newCardHeader()
         .setTitle('¡Aparece un gato!')
         .setSubtitle('¿No es bonito?')
         .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/icon_48.png')
@@ -79,7 +79,7 @@ function createCatCard(text, isHomepage = false) {
             .setText('Maullando con cataas.com')
             .setOpenLink(CardService.newOpenLink()
                 .setUrl('https://cataas.com')))
-        .setSecondaryButton(CardService.newTextButton().setText('Otro').setOpenLink(CardService.newOpenLink().setUrl('www.google.com')));
+    //.setSecondaryButton(CardService.newTextButton().setText('Otro').setOpenLink(CardService.newOpenLink().setUrl('www.google.com')));
 
     // Assemble the widgets and return the card.
     const section = CardService.newCardSection()
