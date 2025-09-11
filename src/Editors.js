@@ -3,6 +3,7 @@
  * @param {object} e
  */
 function onEditorHomepage(e) {
+    console.log(e);
     const mainHeader = CardService.newCardHeader()
         .setTitle('¡Aparece un gato!')
         .setSubtitle('¿No es bonito?')
