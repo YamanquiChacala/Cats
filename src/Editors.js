@@ -75,5 +75,6 @@ function onFileScopeGrantedEditors(e) {
     const text = "Scope";
     const menu = DocumentApp.getUi().createAddonMenu();
     menu.addItem("Start workflow", "startWorkflow");
+    menu.addToUi();
     return createCatCard(text);
 }
