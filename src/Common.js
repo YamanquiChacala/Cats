@@ -10,10 +10,6 @@
 * manifest > Install add-on" to install it.
 */
 
-/**
- * The maximum number of characters that can fit in the cat image.
- */
-const MAX_MESSAGE_LENGTH = 40;
 
 /**
  * Callback for rendering the homepage card.
@@ -32,40 +28,27 @@ function onHomepage(e) {
         message = 'Buenas noches';
     }
     message += ', ' + e.hostApp;
-    return createCatCard(message, true);
+    let requestFileAuth = false;
+    if (['docs', 'sheets'].includes(e.hostApp)) {
+        requestFileAuth = true;
+    }
+    return createCatCard(message, requestFileAuth, true);
 }
 
 /**
  * Creates a card with an image of a cat, overlayed with the text.
  * @param {String} text The text to overlay on the image.
+ * @param {Boolean} [requestFileAuth] True if the card should ask the user permission to modify the current editor file.
  * @param {Boolean} [isHomepage] True if the card created here is a homepage;
  *      false otherwise. Defaults to false.
  * @return {GoogleAppsScript.Card_Service.Card} The assembled card.
  */
-function createCatCard(text, isHomepage = false) {
-    // Use the "Cat as a service" API to get the cat image. Add a "time" URL
-    // parameter to act as a cache buster.
-    const now = new Date();
-    // Replace forward slashes in the text, as they break the CataaS API.
-    const caption = text.replace(/\//g, ' ');
-    const imageUrl =
-        Utilities.formatString('https://cataas.com/cat/says/%s?time=%s', encodeURIComponent(caption), now.getTime());
-
-    const mainHeader = CardService.newCardHeader()
-        .setTitle('¡Aparece un gato!')
-        .setSubtitle('¿No es bonito?')
-        .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/icon_48.png')
-        .setImageStyle(CardService.ImageStyle.CIRCLE);
-
-    const image = CardService.newImage()
-        .setImageUrl(imageUrl)
-        .setAltText('Miau')
-
+function createCatCard(text, requestFileAuth = false, isHomepage = false) {
     // Create a button that changes the cat image when pressed.
     // Note: Action parameter keys and values must be strings.
     const action = CardService.newAction()
         .setFunctionName('onChangeCat')
-        .setParameters({ text: text, isHomepage: isHomepage.toString() });
+        .setParameters({ text: text, isHomepage: isHomepage.toString(), requestFileAuth: requestFileAuth.toString() });
     const button = CardService.newTextButton()
         .setText('Nuevo gato')
         .setAltText('Gato escondido')
@@ -73,6 +56,7 @@ function createCatCard(text, isHomepage = false) {
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED);
     const buttonSet = CardService.newButtonSet()
         .addButton(button);
+
     // Create a footer to be shown at the bottom.
     const footer = CardService.newFixedFooter()
         .setPrimaryButton(CardService.newTextButton()
@@ -83,11 +67,28 @@ function createCatCard(text, isHomepage = false) {
 
     // Assemble the widgets and return the card.
     const section = CardService.newCardSection()
-        .addWidget(image)
+        .addWidget(catImage(text, 'Miau'))
         .addWidget(buttonSet);
+    
+    if( requestFileAuth) {
+        const requestAction = CardService.newAction()
+            .setFunctionName('askPermission');
+        
+        const requestButton = CardService.newTextButton()
+            .setText('Permiso para modificar')
+            .setOnClickAction(requestAction)
+            .setTextButtonStyle(CardService.TextButtonStyle.FILLED);
+        
+        const requestButtonSet = CardService.newButtonSet()
+            .addButton(requestButton);
+        
+        section
+            .addWidget(CardService.newDivider())
+            .addWidget(requestButtonSet);
+    }
 
     const card = CardService.newCardBuilder()
-        .setHeader(mainHeader)
+        .setHeader(catHeader('¡Aparece un gato!', '¿No es bonito?'))
         .addSection(section)
         .setFixedFooter(footer);
 
@@ -101,8 +102,6 @@ function createCatCard(text, isHomepage = false) {
             .setSubtitle(text);
         card.setPeekCardHeader(peekHeader);
     }
-
-
     return card.build();
 }
 
@@ -122,8 +121,10 @@ function onChangeCat(e) {
     // The isHomepage parameter is passed as a string, so convert to a Boolean.
     const isHomepage = e.parameters.isHomepage === 'true';
 
+    const requestFileAuth = e.parameters.requestFileAuth === 'true';
+
     // Create a new card with the same text.
-    const card = createCatCard(text, isHomepage);
+    const card = createCatCard(text, requestFileAuth, isHomepage);
 
     // Create an action response that instructs the add-on to replace
     // the current card with the new one.
@@ -135,15 +136,14 @@ function onChangeCat(e) {
 }
 
 /**
- * Truncate a message to fit in the cat image.
- * @param {string} message The message to truncate.
- * @return {string} The truncated message.
+ * Callback to request permission to edit a file.
+ * @returns {GoogleAppsScript.Card_Service.EditorFileScopeActionResponse} The dialog asking the user permission.
  */
-function truncate(message) {
-    if (message.length > MAX_MESSAGE_LENGTH) {
-        message = message.slice(0, MAX_MESSAGE_LENGTH);
-        message = message.slice(0, message.lastIndexOf(' ')) + '\n...';
-    }
-    return message;
+function askPermission() {
+    return CardService.newEditorFileScopeActionResponseBuilder()
+        .requestFileScopeForActiveDocument()
+        .build();
 }
+
+
 
