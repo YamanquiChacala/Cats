@@ -1,76 +1,76 @@
-  {
-    "timeZone": "America/Mazatlan",
-    "dependencies": {},
-    "exceptionLogging": "STACKDRIVER",
-    "oauthScopes": [
-      "https://www.googleapis.com/auth/script.locale",
-      "https://www.googleapis.com/auth/drive.addons.metadata.readonly",
-      "https://www.googleapis.com/auth/calendar.addons.execute",
-      "https://www.googleapis.com/auth/calendar.readonly",
-      "https://www.googleapis.com/auth/gmail.addons.current.action.compose",
-      "https://www.googleapis.com/auth/gmail.addons.execute",
-      "https://www.googleapis.com/auth/drive.file"
-    ],
-    "runtimeVersion": "V8",
-    "addOns": {
-      "common": {
-        "name": "Gatos",
-        "logoUrl": "https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/icon_48.png",
-        "layoutProperties": {
-          "primaryColor": "#92e7ac"
-        },
-        "openLinkUrlPrefixes": [
-          "https://cataas.com/"
-        ],
-        "useLocaleFromApp": true,
-        "homepageTrigger": {
-          "runFunction": "onHomepage",
-          "enabled": true
-        },
-        "universalActions": [
+{
+  "timeZone": "America/Mazatlan",
+  "dependencies": {},
+  "exceptionLogging": "STACKDRIVER",
+  "oauthScopes": [
+    "https://www.googleapis.com/auth/script.locale",
+    "https://www.googleapis.com/auth/drive.addons.metadata.readonly",
+    "https://www.googleapis.com/auth/calendar.addons.execute",
+    "https://www.googleapis.com/auth/calendar.readonly",
+    "https://www.googleapis.com/auth/gmail.addons.current.action.compose",
+    "https://www.googleapis.com/auth/gmail.addons.execute",
+    "https://www.googleapis.com/auth/drive.file"
+  ],
+  "runtimeVersion": "V8",
+  "addOns": {
+    "common": {
+      "name": "🐱 Gatos",
+      "logoUrl": "https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/icon_48.png",
+      "layoutProperties": {
+        "primaryColor": "#92e7ac"
+      },
+      "openLinkUrlPrefixes": [
+        "https://cataas.com/"
+      ],
+      "useLocaleFromApp": true,
+      "homepageTrigger": {
+        "runFunction": "onHomepage",
+        "enabled": true
+      },
+      "universalActions": [
+        {
+          "label": "Acerca de Cataas",
+          "openLink": "https://cataas.com"
+        }
+      ]
+    },
+    "gmail": {
+      "contextualTriggers": [
+        {
+          "unconditional": {},
+          "onTriggerFunction": "onGmailMessage"
+        }
+      ],
+      "composeTrigger": {
+        "selectActions": [
           {
-            "label": "Acerca de Cataas",
-            "openLink": "https://cataas.com"
-          }
-        ]
-      },
-      "gmail": {
-        "contextualTriggers": [
-          {
-            "unconditional": {},
-            "onTriggerFunction": "onGmailMessage"
+            "text": "Insertar gato",
+            "runFunction": "onGmailCompose"
           }
         ],
-        "composeTrigger": {
-          "selectActions": [
-            {
-              "text": "Insertar gato",
-              "runFunction": "onGmailCompose"
-            }
-          ],
-          "draftAccess": "NONE"
-        }
-      },
-      "drive": {
-        "onItemsSelectedTrigger": {
-          "runFunction": "onDriveItemsSelected"
-        }
-      },
-      "calendar": {
-        "eventOpenTrigger": {
-          "runFunction": "onCalendarEventOpen"
-        }
-      },
-      "docs": {
-        "homepageTrigger": {
-          "runFunction": "onEditorHomepage"
-        },
-        "onFileScopeGrantedTrigger": {
-          "runFunction": "onFileScopeGrantedEditors"
-        }
+        "draftAccess": "NONE"
       }
     },
-    "urlFetchWhitelist": [
-      "https://cataas.com/"
-    ]
-  }
+    "drive": {
+      "onItemsSelectedTrigger": {
+        "runFunction": "onDriveItemsSelected"
+      }
+    },
+    "calendar": {
+      "eventOpenTrigger": {
+        "runFunction": "onCalendarEventOpen"
+      }
+    },
+    "docs": {
+      "homepageTrigger": {
+        "runFunction": "onEditorHomepage"
+      },
+      "onFileScopeGrantedTrigger": {
+        "runFunction": "onFileScopeGrantedEditors"
+      }
+    }
+  },
+  "urlFetchWhitelist": [
+    "https://cataas.com/"
+  ]
+}
