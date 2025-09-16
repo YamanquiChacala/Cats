@@ -32,6 +32,28 @@ function orderSection(reverse) {
     return CardService.newCardSection().addWidget(orderWidget);
 }
 
+function orderSection2(reverse) {
+    const orderButton1 = CardService.newImageButton()
+        .setMaterialIcon(CardService.newMaterialIcon()
+            .setName('arrow_circle_down')
+            .setWeight(700)
+            .setGrade(200))
+        .setOnClickAction(CardService.newAction()
+            .setFunctionName('')
+            .setParameters({}));
+    const orderButton2 = CardService.newImageButton()
+        .setMaterialIcon(CardService.newMaterialIcon()
+            .setName('arrow_circle_up')
+            .setWeight(700)
+            .setGrade(200))
+        .setOnClickAction(CardService.newAction()
+            .setFunctionName('')
+            .setParameters({}));
+    return CardService.newCardSection()
+        .setHeader('Orden:')
+        .addWidget(CardService.newButtonSet().addButton(orderButton1).addButton(orderButton2));
+}
+
 
 function onDriveHomepage(e) {
     console.log(e);
@@ -81,7 +103,7 @@ function onDriveHomepage(e) {
 
     return CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
-        .addSection(orderSection(false))
+        .addSection(orderSection2(false))
         .addSection(drivesSection)
         .build();
 }
