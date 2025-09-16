@@ -44,44 +44,23 @@ function onHomepage(e) {
  * @return {GoogleAppsScript.Card_Service.Card} The assembled card.
  */
 function createCatCard(text, requestFileAuth = false, isHomepage = false) {
-    // Create a button that changes the cat image when pressed.
-    // Note: Action parameter keys and values must be strings.
-    const action = CardService.newAction()
-        .setFunctionName('onChangeCat')
-        .setParameters({ text: text, isHomepage: isHomepage.toString(), requestFileAuth: requestFileAuth.toString() });
-    const button = CardService.newTextButton()
-        .setText('Nuevo gato')
-        .setAltText('Gato escondido')
-        .setOnClickAction(action)
-        .setTextButtonStyle(CardService.TextButtonStyle.FILLED);
-    const buttonSet = CardService.newButtonSet()
-        .addButton(button);
-
-    // Create a footer to be shown at the bottom.
-    const footer = CardService.newFixedFooter()
-        .setPrimaryButton(CardService.newTextButton()
-            .setText('Maullando con cataas.com')
-            .setOpenLink(CardService.newOpenLink()
-                .setUrl('https://cataas.com')))
-    //.setSecondaryButton(CardService.newTextButton().setText('Otro').setOpenLink(CardService.newOpenLink().setUrl('www.google.com')));
-
     // Assemble the widgets and return the card.
     const section = CardService.newCardSection()
         .addWidget(catImage(text, 'Miau'))
-        .addWidget(buttonSet);
-    
-    if( requestFileAuth) {
+        .addWidget(reloadButton('Nuevo gato', createCatCard, [text, requestFileAuth, isHomepage]));
+
+    if (requestFileAuth) {
         const requestAction = CardService.newAction()
             .setFunctionName('askPermission');
-        
+
         const requestButton = CardService.newTextButton()
             .setText('Permiso para modificar')
             .setOnClickAction(requestAction)
             .setTextButtonStyle(CardService.TextButtonStyle.FILLED);
-        
+
         const requestButtonSet = CardService.newButtonSet()
             .addButton(requestButton);
-        
+
         section
             .addWidget(CardService.newDivider())
             .addWidget(requestButtonSet);
@@ -90,7 +69,9 @@ function createCatCard(text, requestFileAuth = false, isHomepage = false) {
     const card = CardService.newCardBuilder()
         .setHeader(catHeader('¡Aparece un gato!', '¿No es bonito?'))
         .addSection(section)
-        .setFixedFooter(footer);
+        .setFixedFooter(cardFooter());
+
+
 
     if (!isHomepage) {
         // Create the header shown when the card is minimized,
@@ -105,35 +86,6 @@ function createCatCard(text, requestFileAuth = false, isHomepage = false) {
     return card.build();
 }
 
-/**
- * Callback for the "Change cat" button.
- * @param {Object} e The event object, documented {@link
- *     https://developers.google.com/gmail/add-ons/concepts/actions#action_event_objects
- *     here}.
- * @return {GoogleAppsScript.Card_Service.ActionResponse} The action response to apply.
- */
-function onChangeCat(e) {
-    console.log(e);
-    // Get the text that was shown in the current cat image. This was passed as a
-    // parameter on the Action set for the button.
-    const text = e.parameters.text;
-
-    // The isHomepage parameter is passed as a string, so convert to a Boolean.
-    const isHomepage = e.parameters.isHomepage === 'true';
-
-    const requestFileAuth = e.parameters.requestFileAuth === 'true';
-
-    // Create a new card with the same text.
-    const card = createCatCard(text, requestFileAuth, isHomepage);
-
-    // Create an action response that instructs the add-on to replace
-    // the current card with the new one.
-    const navigation = CardService.newNavigation()
-        .updateCard(card);
-    const actionResponse = CardService.newActionResponseBuilder()
-        .setNavigation(navigation);
-    return actionResponse.build();
-}
 
 /**
  * Callback to request permission to edit a file.

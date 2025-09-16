@@ -1,16 +1,20 @@
 const MAX_CAPTION_LENGTH = 40;
 
+const CARD_GENERATORS = {
+  createCatCard,
+};
+
 /**
  * Ensure the caption is ready for a cat image.
  * @param {string} caption The message to sanitize.
  * @return {string} The fixed message.
  */
 function sanitize(caption) {
-    if (caption.length > MAX_CAPTION_LENGTH) {
-        caption = caption.slice(0, MAX_CAPTION_LENGTH);
-        caption = caption.slice(0, regexLastIndexOf(caption, /[:;\-_.,\n ] */g)) + '...';
-    }
-    return encodeURIComponent(caption);
+  if (caption.length > MAX_CAPTION_LENGTH) {
+    caption = caption.slice(0, MAX_CAPTION_LENGTH);
+    caption = caption.slice(0, regexLastIndexOf(caption, /[:;\-_.,\n ] */g)) + '...';
+  }
+  return encodeURIComponent(caption);
 }
 
 /**

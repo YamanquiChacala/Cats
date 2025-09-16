@@ -15,6 +15,17 @@ function catHeader(title, subtitle) {
 }
 
 /**
+ * @returns {GoogleAppsScript.Card_Service.FixedFooter} The Footer with the link to cataas
+ */
+function cardFooter() {
+    return CardService.newFixedFooter()
+        .setPrimaryButton(CardService.newTextButton()
+            .setText('Maullando con cataas.com')
+            .setOpenLink(CardService.newOpenLink()
+                .setUrl('https://cataas.com')))
+}
+
+/**
  * @param {string} caption What the cat will say
  * @param {any} [altText] Tooltip text for the image
  * @return {GoogleAppsScript.Card_Service.Image} The image, ready to insert on a Card
@@ -27,4 +38,54 @@ function catImage(caption, altText) {
         image.setAltText(altText);
     }
     return image;
+}
+
+
+/**
+ * @param {string} text
+ * @param {(...args: any[]) => GoogleAppsScript.Card_Service.Card} cardGenerator
+ * @param {[...args: any[]]} [args]
+ * @returns {GoogleAppsScript.Card_Service.TextButton} The button, reado to insert on a Card.
+ */
+function reloadButton(text, cardGenerator, args = []) {
+    const generatorName = cardGenerator.name
+    if (!generatorName || !(generatorName in CARD_GENERATORS)) {
+        throw new Error(`Card generator ${generatorName} is not registered`);
+    }
+
+    const action = CardService.newAction()
+        .setFunctionName(reloadCallback.name)
+        .setParameters({
+            generatorName,
+            args: JSON.stringify(args),
+        });
+
+    return CardService.newTextButton()
+        .setText(text)
+        .setOnClickAction(action)
+        .setTextButtonStyle(CardService.TextButtonStyle.FILLED);
+}
+
+
+
+
+/**
+ * @param {object} e
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse}
+ */
+function reloadCallback(e) {
+    console.log(e)
+    const generatorName = e.parameters.generatorName;
+    const generator = CARD_GENERATORS[generatorName];
+    if (!generator) {
+        throw new Error(`Unknown card generator: ${generatorName}`);
+    }
+
+    const args = JSON.parse(e.parameters.args || '[]');
+
+    const card = generator(...args);
+
+    return CardService.newActionResponseBuilder()
+        .setNavigation(CardService.newNavigation().updateCard(card))
+        .build();
 }

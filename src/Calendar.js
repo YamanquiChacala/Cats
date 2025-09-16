@@ -15,6 +15,6 @@ function onCalendarEventOpen(e) {
     }
     var title = event.getTitle();
     // If necessary, truncate the title to fit in the image.
-    title = truncate(title);
+    title = sanitize(title);
     return createCatCard(title);
 }
