@@ -19,13 +19,16 @@ function onDriveItemsSelected(e) {
 }
 
 /**
- * @param {boolean} reverse Swap from A-Z to Z-A
+ * @param {string} parentId
+ * @param {string} driveId
+ * @param {string} folderName
+ * @param {boolean} reverseOrder Swap from A-Z to Z-A
  * @returns {GoogleAppsScript.Card_Service.CardSection} Widget showing the sort order A-Z or Z-A
  */
-function orderSection(reverse) {
+function orderSection(parentId, driveId, folderName, reverseOrder) {
     let orderText = 'A-Z';
     let orderImage = 'arrow_downward';
-    if (reverse) {
+    if (reverseOrder) {
         orderText = 'Z-A';
         orderImage = 'arrow_upward';
     }
@@ -39,9 +42,26 @@ function orderSection(reverse) {
             .setName(orderImage)
             .setGrade(200)))
         .setOnClickAction(CardService.newAction()
-            .setFunctionName('')
-            .setParameters({}));
+            .setFunctionName(handleOrderSwitch.name)
+            .setParameters({parentId, driveId, folderName, reverseOrder: (!reverseOrder).toString()}));
     return CardService.newCardSection().addWidget(orderWidget);
+}
+
+/**
+ * @param {{ parameters: { parentId: any; driveId: any; folderName: any; reverseOrder: string; }; }} e
+ */
+function handleOrderSwitch(e) {
+    const parentId = e.parameters.parentId;
+    const driveId = e.parameters.driveId;
+    const folderName = e.parameters.folderName;
+    const reverseOrder = e.parameters.reverseOrder === 'true';
+
+    const card = folderSelectCard(parentId, driveId, folderName, reverseOrder);
+
+    return CardService.newActionResponseBuilder()
+        .setNavigation(CardService.newNavigation()
+            .updateCard(card))
+        .build();
 }
 
 function driveSelectCard() {
@@ -82,33 +102,63 @@ function driveSelectCard() {
 
 /**
  * @param {string} parentId
+ * @param {boolean} files
+ * @returns {string} The query for Drive API
+ */
+function query(parentId, files) {
+    return `mimeType ${files ? '!' : ''}= 'application/vnd.google-apps.folder' and trashed = false and '${parentId}' in parents`;
+}
+
+/**
+ * @param {number} fileCount
+ */
+function fileCountWidget(fileCount) {
+    let icon = 'file_copy';
+    let text = `<b>${fileCount}</b> archivos`;
+    if (fileCount == 0) {
+        icon = 'file_copy_off';
+        text = 'Carpeta <b>vacía</b>'
+    }
+    return CardService.newDecoratedText()
+        .setText(text)
+        .setBottomLabel('Contenido de la carpeta')
+        .setStartIcon(CardService.newIconImage()
+            .setMaterialIcon(CardService.newMaterialIcon()
+                .setName(icon)));
+    
+}
+
+/**
+ * @param {string} parentId
  * @param {string} driveId
  * @param {string} folderName
  * @param {boolean} reverseOrder
  */
 function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
-    const foldersSection = CardService.newCardSection();
+    const foldersSection = CardService.newCardSection()
+        .addWidget(CardService.newDecoratedText()
+            .setText(`<b>${folderName}</b>`)
+            .setStartIcon(CardService.newIconImage()
+                .setMaterialIcon(CardService.newMaterialIcon()
+                    .setName('folder_eye'))))
+        .addWidget(CardService.newDivider());
 
-    const q = `mimeType = 'application/vnd.google-apps.folder' and trashed = false and '${parentId}' in parents`;
     const corpora = driveId === 'root' ? 'user' : 'drive'
     const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
     const params = {
-        q,
         corpora,
         orderBy,
         pagesize: 100,
         includeItemsFromAllDrives: true,
-        supportsAllDrives: true
+        supportsAllDrives: true,
+        fields: 'files(name,id,driveId,capabilities(canRename,canEdit,canTrash,canAddChildren,canModifyContent,canRemoveChildren))'
     }
     if (corpora === 'drive') {
         params.driveId = driveId;
     }
 
-    const folders = Drive.Files.list(params).files;
-
-    if (!folders || folders.length == 0) {
-        foldersSection.addWidget(CardService.newTextParagraph().setText('Folder vacío'));
-    }
+    const files =  Drive.Files.list({...params, q:query(parentId, true), fields: 'files(id)'}).files;
+    const folders =  Drive.Files.list({...params, q:query(parentId, false)}).files;
 
     folders.forEach((folder) => {
         const widget = CardService.newDecoratedText()
@@ -122,9 +172,12 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
         foldersSection.addWidget(widget);
     });
 
+    foldersSection.addWidget(CardService.newDivider())
+        .addWidget(fileCountWidget(files.length));
+
     return CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', folderName))
-        .addSection(orderSection(reverseOrder))
+        .addSection(orderSection(parentId, driveId, folderName, reverseOrder))
         .addSection(foldersSection)
         .setFixedFooter(cardFooter())
         .build()
