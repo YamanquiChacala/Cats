@@ -18,108 +18,128 @@ function onDriveItemsSelected(e) {
     return createCatCard(text);
 }
 
+/**
+ * @param {boolean} reverse Swap from A-Z to Z-A
+ * @returns {GoogleAppsScript.Card_Service.CardSection} Widget showing the sort order A-Z or Z-A
+ */
 function orderSection(reverse) {
+    let orderText = 'A-Z';
+    let orderImage = 'arrow_downward';
+    if (reverse) {
+        orderText = 'Z-A';
+        orderImage = 'arrow_upward';
+    }
+
     const orderWidget = CardService.newDecoratedText()
-        .setText('Orden:')
-        .setButton(CardService.newImageButton()
-            .setMaterialIcon(CardService.newMaterialIcon()
-                .setName('arrow_circle_down')
-                .setFill(true)
-                .setGrade(200))
-            .setOnClickAction(CardService.newAction()
-                .setFunctionName('')
-                .setParameters({})));
+        .setText(`Orden: <b>${orderText}</b>`)
+        .setBottomLabel('<i>Selecciona para invertir</i>')
+        .setStartIcon(CardService.newIconImage()
+            .setIcon(CardService.Icon.NONE))
+        .setEndIcon(CardService.newIconImage().setMaterialIcon(CardService.newMaterialIcon()
+            .setName(orderImage)
+            .setGrade(200)))
+        .setOnClickAction(CardService.newAction()
+            .setFunctionName('')
+            .setParameters({}));
     return CardService.newCardSection().addWidget(orderWidget);
 }
 
-function orderSection2(reverse) {
-    const orderButton1 = CardService.newImageButton()
-        .setMaterialIcon(CardService.newMaterialIcon()
-            .setName('arrow_circle_down')
-            .setWeight(700)
-            .setGrade(200))
-        .setOnClickAction(CardService.newAction()
-            .setFunctionName('')
-            .setParameters({}));
-    const orderButton2 = CardService.newImageButton()
-        .setMaterialIcon(CardService.newMaterialIcon()
-            .setName('arrow_circle_up')
-            .setWeight(700)
-            .setGrade(200))
-        .setOnClickAction(CardService.newAction()
-            .setFunctionName('')
-            .setParameters({}));
-    return CardService.newCardSection()
-        .setHeader('Orden:')
-        .addWidget(CardService.newButtonSet().addButton(orderButton1).addButton(orderButton2));
-}
-
-
-function onDriveHomepage(e) {
-    console.log(e);
-
-    const drivesSection = CardService.newCardSection();
-
+function driveSelectCard() {
     const myDriveWidget = CardService.newDecoratedText()
-        .setText('My Drive')
-        .setBottomLabel('Personal Storage')
+        .setText('Mi Unidad')
+        .setBottomLabel('Disco personal')
         .setStartIcon(CardService.newIconImage()
             .setMaterialIcon(CardService.newMaterialIcon()
                 .setName('home_and_garden')))
         .setOnClickAction(CardService.newAction()
-            .setFunctionName(handleDriveClick.name)
-            .setParameters({ driveId: 'root', driveName: 'My Drive' }));
+            .setFunctionName(showFolders.name)
+            .setParameters({ parentId: 'root', driveId: 'root', folderName: 'Mi Unidad', reverseOrder: 'false' }));
 
-    drivesSection.addWidget(myDriveWidget);
+    const drivesSection = CardService.newCardSection()
+        .addWidget(myDriveWidget)
+        .addWidget(CardService.newDivider())
 
-    const parentId = '0AHqykuEEl-erUk9PVA';
-    const q = "mimeType = 'application/vnd.google-apps.folder' and trashed = false and '" + parentId + "' in parents";
-    const params = {
-        q: q,
-        corpora: 'drive',
-        driveId: '0AHqykuEEl-erUk9PVA',
-        orderBy: 'name_natural',
-        pageSize: 100,
-        includeItemsFromAllDrives: true,
-        supportsAllDrives: true
-    };
-    const resp = Drive.Files.list(params);
-    console.log(resp);
-
-
-    const drives = Drive.Drives.list().drives || [];
-    drives.forEach((drive) => {
+    const sharedDrives = Drive.Drives.list({ orderBy: 'name_natural' }).drives || [];
+    sharedDrives.forEach((drive) => {
         const widget = CardService.newDecoratedText()
             .setText(drive.name)
-            .setBottomLabel('Shared Drive')
+            .setBottomLabel('Disco compartido')
             .setStartIcon(CardService.newIconImage()
                 .setMaterialIcon(CardService.newMaterialIcon()
                     .setName('folder_shared')))
             .setOnClickAction(CardService.newAction()
-                .setFunctionName(handleDriveClick.name)
-                .setParameters({ driveId: drive.id, driveName: drive.name }));
+                .setFunctionName(showFolders.name)
+                .setParameters({ parentId: drive.id, driveId: drive.id, folderName: drive.name, reverseOrder: 'false' }));
         drivesSection.addWidget(widget);
     });
 
     return CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
-        .addSection(orderSection2(false))
         .addSection(drivesSection)
+        .setFixedFooter(cardFooter())
         .build();
 }
 
-function handleDriveClick(e) {
-    console.log(e);
+/**
+ * @param {string} parentId
+ * @param {string} driveId
+ * @param {string} folderName
+ * @param {boolean} reverseOrder
+ */
+function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
+    const foldersSection = CardService.newCardSection();
+
+    const q = `mimeType = 'application/vnd.google-apps.folder' and trashed = false and '${parentId}' in parents`;
+    const corpora = driveId === 'root' ? 'user' : 'drive'
+    const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
+    const params = {
+        q,
+        corpora,
+        orderBy,
+        pagesize: 100,
+        includeItemsFromAllDrives: true,
+        supportsAllDrives: true
+    }
+    if (corpora === 'drive') {
+        params.driveId = driveId;
+    }
+
+    const folders = Drive.Files.list(params).files;
+
+    if (!folders || folders.length == 0) {
+        foldersSection.addWidget(CardService.newTextParagraph().setText('Folder vacío'));
+    }
+
+    folders.forEach((folder) => {
+        const widget = CardService.newDecoratedText()
+            .setText(folder.name)
+            .setStartIcon(CardService.newIconImage()
+                .setMaterialIcon(CardService.newMaterialIcon()
+                    .setName('folder')))
+            .setOnClickAction(CardService.newAction()
+                .setFunctionName(showFolders.name)
+                .setParameters({ parentId: folder.id, driveId, folderName: folder.name, reverseOrder: reverseOrder.toString() }));
+        foldersSection.addWidget(widget);
+    });
+
+    return CardService.newCardBuilder()
+        .setHeader(catHeader('Elige una carpeta', folderName))
+        .addSection(orderSection(reverseOrder))
+        .addSection(foldersSection)
+        .setFixedFooter(cardFooter())
+        .build()
+}
+
+/**
+ * @param {{ parameters: { parentId: any; driveId: any; folderName: any; reverseOrder: string; }; }} e
+ */
+function showFolders(e) {
+    const parentId = e.parameters.parentId;
     const driveId = e.parameters.driveId;
-    const driveName = e.parameters.driveName;
+    const folderName = e.parameters.folderName;
+    const reverseOrder = e.parameters.reverseOrder === 'true';
 
-    const section = CardService.newCardSection()
-        .addWidget(CardService.newTextParagraph()
-            .setText('You selected <b>' + driveName + '</b>'))
-
-    const card = CardService.newCardBuilder()
-        .addSection(section)
-        .build();
+    const card = folderSelectCard(parentId, driveId, folderName, reverseOrder);
 
     return CardService.newActionResponseBuilder()
         .setNavigation(CardService.newNavigation()
@@ -127,11 +147,11 @@ function handleDriveClick(e) {
         .build();
 }
 
-function folderListCard(driveId, driveName) {
-    const folderSelection = CardService.newCardSection();
+/**
+ * @param {string | object} e
+ */
+function onDriveHomepage(e) {
+    console.log(e);
 
-    const folders = Drive.Files.list({
-        q: "mimeType='application/vnd.google-apps.folder' and trashed=false",
-
-    });
+    return driveSelectCard();
 }
