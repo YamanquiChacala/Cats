@@ -1,10 +1,24 @@
 /**
-* Callback for rendering the card for specific Drive items.
-* @param {Object} e The event object.
+ * Main function called when the user opens the app in Drive.
+ * 
+ * @param {GoogleAppsScript.AddOn.AddOnEvent} e Generic details of the user.
+ * @returns {GoogleAppsScript.Card_Service.Card} The main card to display to the user.
+ */
+function onDriveHomepage(e) {
+    console.log(e);
+
+    return driveSelectCard();
+}
+
+/**
+* Main function when the user selects an item on Drive
+
+* @param {GoogleAppsScript.AddOn.AddOnEvent} e Details of the selection.
 * @return {GoogleAppsScript.Card_Service.Card} The card to show to the user.
 */
 function onDriveItemsSelected(e) {
     console.log(e);
+    console.log(`Timezone offset: ${e.commonEventObject.timeZone.offset + 1000}`);
     /** @type {{title:string}[]} */
     var items = e.drive.selectedItems;
     // Include at most 5 items in the text.
@@ -19,6 +33,8 @@ function onDriveItemsSelected(e) {
 }
 
 /**
+ * Widget to select ordering (A-Z) or (Z-A) for the list of folders.
+ * 
  * @param {string} parentId
  * @param {string} driveId
  * @param {string} folderName
@@ -43,7 +59,7 @@ function orderSection(parentId, driveId, folderName, reverseOrder) {
             .setGrade(200)))
         .setOnClickAction(CardService.newAction()
             .setFunctionName(handleOrderSwitch.name)
-            .setParameters({parentId, driveId, folderName, reverseOrder: (!reverseOrder).toString()}));
+            .setParameters({ parentId, driveId, folderName, reverseOrder: (!reverseOrder).toString() }));
     return CardService.newCardSection().addWidget(orderWidget);
 }
 
@@ -125,7 +141,7 @@ function fileCountWidget(fileCount) {
         .setStartIcon(CardService.newIconImage()
             .setMaterialIcon(CardService.newMaterialIcon()
                 .setName(icon)));
-    
+
 }
 
 /**
@@ -135,14 +151,6 @@ function fileCountWidget(fileCount) {
  * @param {boolean} reverseOrder
  */
 function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
-    const foldersSection = CardService.newCardSection()
-        .addWidget(CardService.newDecoratedText()
-            .setText(`<b>${folderName}</b>`)
-            .setStartIcon(CardService.newIconImage()
-                .setMaterialIcon(CardService.newMaterialIcon()
-                    .setName('folder_eye'))))
-        .addWidget(CardService.newDivider());
-
     const corpora = driveId === 'root' ? 'user' : 'drive'
     const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
     const params = {
@@ -157,8 +165,21 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
         params.driveId = driveId;
     }
 
-    const files =  Drive.Files.list({...params, q:query(parentId, true), fields: 'files(id)'}).files;
-    const folders =  Drive.Files.list({...params, q:query(parentId, false)}).files;
+    const files = Drive.Files.list({ ...params, q: query(parentId, true), fields: 'files(id)' }).files;
+    const folders = Drive.Files.list({ ...params, q: query(parentId, false) }).files;
+
+
+    const foldersSection = CardService.newCardSection()
+        .addWidget(CardService.newDecoratedText()
+            .setText(`<b>${folderName}</b>`)
+            .setBottomLabel('Carpeta actual')
+            .setStartIcon(CardService.newIconImage()
+                .setMaterialIcon(CardService.newMaterialIcon()
+                    .setName('folder_eye'))))
+        .addWidget(CardService.newDivider())
+        .addWidget(fileCountWidget(files.length))
+        .addWidget(CardService.newDivider());
+
 
     folders.forEach((folder) => {
         const widget = CardService.newDecoratedText()
@@ -172,9 +193,6 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
         foldersSection.addWidget(widget);
     });
 
-    foldersSection.addWidget(CardService.newDivider())
-        .addWidget(fileCountWidget(files.length));
-
     return CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', folderName))
         .addSection(orderSection(parentId, driveId, folderName, reverseOrder))
@@ -184,9 +202,10 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
 }
 
 /**
- * @param {{ parameters: { parentId: any; driveId: any; folderName: any; reverseOrder: string; }; }} e
+ * @param {GoogleAppsScript.AddOn.AddOnEvent} e
  */
 function showFolders(e) {
+    console.log(e);
     const parentId = e.parameters.parentId;
     const driveId = e.parameters.driveId;
     const folderName = e.parameters.folderName;
@@ -198,13 +217,4 @@ function showFolders(e) {
         .setNavigation(CardService.newNavigation()
             .pushCard(card))
         .build();
-}
-
-/**
- * @param {string | object} e
- */
-function onDriveHomepage(e) {
-    console.log(e);
-
-    return driveSelectCard();
 }

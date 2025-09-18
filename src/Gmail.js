@@ -43,6 +43,16 @@ function onGmailCompose(e) {
         .setFieldName('text')
         .setTitle('Caption')
         .setHint('What do you want the cat to say?');
+    const switchDecoratedText =
+        CardService.newDecoratedText()
+            .setTopLabel('Switch decorated text widget label')
+            .setText('This is a decorated text widget with a switch on the right')
+            .setWrapText(true)
+            .setSwitchControl(
+                CardService.newSwitch()
+                    .setFieldName('form_input_switch_key')
+                    .setValue('form_input_switch_value')
+            );
     // Create a button that inserts the cat image when pressed.
     var action = CardService.newAction()
         .setFunctionName('onGmailInsertCat');
@@ -55,6 +65,7 @@ function onGmailCompose(e) {
     // Assemble the widgets and return the card.
     var section = CardService.newCardSection()
         .addWidget(input)
+        .addWidget(switchDecoratedText)
         .addWidget(buttonSet);
     var card = CardService.newCardBuilder()
         .setHeader(header)
@@ -64,11 +75,12 @@ function onGmailCompose(e) {
 
 /**
  * Callback for inserting a cat into the Gmail draft.
- * @param {Object} e The event object.
+ * @param {GoogleAppsScript.AddOn.AddOnEvent} e The event object.
  * @return {GoogleAppsScript.Card_Service.UpdateDraftActionResponse} The draft update response.
  */
 function onGmailInsertCat(e) {
     console.log(e);
+    console.log("formInputs: ", e.commonEventObject.formInputs.form_input_switch_key);
     // Get the text that was entered by the user.
     var text = e.formInput.text;
     // Use the "Cat as a service" API to get the cat image. Add a "time" URL
