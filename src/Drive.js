@@ -1,7 +1,7 @@
 /**
  * Main function called when the user opens the app in Drive.
  * 
- * @param {GoogleAppsScript.AddOn.AddOnEvent} e Generic details of the user.
+ * @param {GoogleAppsScript.Addons.EventObject} e
  * @returns {GoogleAppsScript.Card_Service.Card} The main card to display to the user.
  */
 function onDriveHomepage(e) {
@@ -13,12 +13,11 @@ function onDriveHomepage(e) {
 /**
 * Main function when the user selects an item on Drive
 
-* @param {GoogleAppsScript.AddOn.AddOnEvent} e Details of the selection.
+* @param {GoogleAppsScript.Addons.EventObject} e
 * @return {GoogleAppsScript.Card_Service.Card} The card to show to the user.
 */
 function onDriveItemsSelected(e) {
     console.log(e);
-    console.log(`Timezone offset: ${e.commonEventObject.timeZone.offset + 1000}`);
     /** @type {{title:string}[]} */
     var items = e.drive.selectedItems;
     // Include at most 5 items in the text.
@@ -202,14 +201,14 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
 }
 
 /**
- * @param {GoogleAppsScript.AddOn.AddOnEvent} e
+ * @param {GoogleAppsScript.Addons.EventObject} e
  */
 function showFolders(e) {
     console.log(e);
-    const parentId = e.parameters.parentId;
-    const driveId = e.parameters.driveId;
-    const folderName = e.parameters.folderName;
-    const reverseOrder = e.parameters.reverseOrder === 'true';
+    const parentId = e.commonEventObject.parameters.parentId;
+    const driveId = e.commonEventObject.parameters.driveId;
+    const folderName = e.commonEventObject.parameters.folderName;
+    const reverseOrder = e.commonEventObject.parameters.reverseOrder === 'true';
 
     const card = folderSelectCard(parentId, driveId, folderName, reverseOrder);
 

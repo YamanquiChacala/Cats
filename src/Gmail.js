@@ -75,14 +75,13 @@ function onGmailCompose(e) {
 
 /**
  * Callback for inserting a cat into the Gmail draft.
- * @param {GoogleAppsScript.AddOn.AddOnEvent} e The event object.
+ * @param {GoogleAppsScript.Addons.EventObject} e The event object.
  * @return {GoogleAppsScript.Card_Service.UpdateDraftActionResponse} The draft update response.
  */
 function onGmailInsertCat(e) {
     console.log(e);
-    console.log("formInputs: ", e.commonEventObject.formInputs.form_input_switch_key);
     // Get the text that was entered by the user.
-    var text = e.formInput.text;
+    var text = e.commonEventObject.formInputs.text.stringInputs.value[0]
     // Use the "Cat as a service" API to get the cat image. Add a "time" URL
     // parameter to act as a cache buster.
     var now = new Date();
