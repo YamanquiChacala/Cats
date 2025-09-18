@@ -18,6 +18,12 @@ function onDriveHomepage(e) {
 */
 function onDriveItemsSelected(e) {
     console.log(e);
+
+    const selectedFileId = e.drive.selectedItems[0].id;
+    const selectedFileDriveId = Drive.Files.get(selectedFileId, { supportsAllDrives: true }).driveId || 'root';
+
+    console.log('Selected file driveId: ', selectedFileDriveId);
+
     /** @type {{title:string}[]} */
     var items = e.drive.selectedItems;
     // Include at most 5 items in the text.
@@ -63,13 +69,13 @@ function orderSection(parentId, driveId, folderName, reverseOrder) {
 }
 
 /**
- * @param {{ parameters: { parentId: any; driveId: any; folderName: any; reverseOrder: string; }; }} e
+ * @param {GoogleAppsScript.Addons.EventObject} e
  */
 function handleOrderSwitch(e) {
-    const parentId = e.parameters.parentId;
-    const driveId = e.parameters.driveId;
-    const folderName = e.parameters.folderName;
-    const reverseOrder = e.parameters.reverseOrder === 'true';
+    const parentId = e.commonEventObject.parameters.parentId;
+    const driveId = e.commonEventObject.parameters.driveId;
+    const folderName = e.commonEventObject.parameters.folderName;
+    const reverseOrder = e.commonEventObject.parameters.reverseOrder === 'true';
 
     const card = folderSelectCard(parentId, driveId, folderName, reverseOrder);
 
