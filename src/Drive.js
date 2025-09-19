@@ -125,17 +125,16 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
         }
     }
 
-    const foldersSection = CardService.newCardSection()
+    const currentFolderSection = CardService.newCardSection()
         .addWidget(CardService.newDecoratedText()
             .setText(`<b>${folderName}</b>`)
             .setBottomLabel('Carpeta actual')
             .setStartIcon(CardService.newIconImage()
                 .setMaterialIcon(CardService.newMaterialIcon()
                     .setName('folder_eye'))))
-        .addWidget(CardService.newDivider())
         .addWidget(fileCountDecoratedText(otherFiles.length))
-        .addWidget(CardService.newDivider());
 
+    const foldersSection = CardService.newCardSection();
 
     folders.forEach((folder) => {
         const widget = CardService.newDecoratedText()
@@ -149,12 +148,16 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
         foldersSection.addWidget(widget);
     });
 
-    return CardService.newCardBuilder()
-        .setHeader(catHeader('Elige una carpeta', folderName))
-        .addSection(orderSection(parentId, driveId, folderName, reverseOrder))
-        .addSection(foldersSection)
+    const card = CardService.newCardBuilder()
+        .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
+        .addSection(currentFolderSection)
         .setFixedFooter(cardFooter())
-        .build()
+    
+    if (folders.length > 0) {
+        card.addSection(foldersSection)
+    }
+    
+    return card.build()
 }
 
 /**
