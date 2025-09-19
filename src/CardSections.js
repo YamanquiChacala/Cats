@@ -88,6 +88,29 @@ function reloadCallback(e) {
 }
 
 /**
+ * DecoratedText widget showing a file count.
+ * 
+ * @param {number} fileCount How many files are there.
+ * @returns {GoogleAppsScript.Card_Service.DecoratedText}
+ */
+function fileCountDecoratedText(fileCount) {
+    let icon = 'file_copy';
+    let text = `<b>${fileCount}</b> otros archivos`;
+    if (fileCount == 1) {
+        text = 'Un único archivo dentro';
+    } else if (fileCount == 0) {
+        icon = 'file_copy_off';
+        text = 'Carpeta <b>vacía</b>';
+    }
+    return CardService.newDecoratedText()
+        .setText(text)
+        .setBottomLabel('Contenido de la carpeta')
+        .setStartIcon(CardService.newIconImage()
+            .setMaterialIcon(CardService.newMaterialIcon()
+                .setName(icon)));
+}
+
+/**
  * Drive widget to select ordering (A-Z) or (Z-A) for the list of folders.
  * 
  * @param {string} parentId

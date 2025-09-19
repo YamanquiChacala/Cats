@@ -83,42 +83,16 @@ function driveSelectCard() {
         .build();
 }
 
+
+
 /**
+ * A card showing the folders of the given prent, so users can select one.
  * 
- * @param {string} parentId
- * @param {boolean} files
- * @returns {string} The query for Drive API
- */
-function query(parentId, files) {
-    return `mimeType ${files ? '!' : ''}= 'application/vnd.google-apps.folder' and trashed = false and '${parentId}' in parents`;
-}
-
-/**
- * @param {number} fileCount
- */
-function fileCountWidget(fileCount) {
-    let icon = 'file_copy';
-    let text = `<b>${fileCount}</b> otros archivos`;
-    if (fileCount == 1) {
-        text = 'Un único archivo dentro';
-    } else if (fileCount == 0) {
-        icon = 'file_copy_off';
-        text = 'Carpeta <b>vacía</b>';
-    }
-    return CardService.newDecoratedText()
-        .setText(text)
-        .setBottomLabel('Contenido de la carpeta')
-        .setStartIcon(CardService.newIconImage()
-            .setMaterialIcon(CardService.newMaterialIcon()
-                .setName(icon)));
-
-}
-
-/**
- * @param {string} parentId
- * @param {string} driveId
- * @param {string} folderName
- * @param {boolean} reverseOrder
+ * @param {string} parentId The folder being shown
+ * @param {string} driveId The Drive the folder belongs to
+ * @param {string} folderName The name of the folder being shown
+ * @param {boolean} reverseOrder false A-Z, true Z-A
+ * @returns {GoogleAppsScript.Card_Service.Card}
  */
 function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
     const q = `trashed = false and '${parentId}' in parents`;
@@ -159,7 +133,7 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
                 .setMaterialIcon(CardService.newMaterialIcon()
                     .setName('folder_eye'))))
         .addWidget(CardService.newDivider())
-        .addWidget(fileCountWidget(otherFiles.length))
+        .addWidget(fileCountDecoratedText(otherFiles.length))
         .addWidget(CardService.newDivider());
 
 
@@ -184,7 +158,19 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
 }
 
 /**
- * @param {GoogleAppsScript.Addons.EventObject} e
+ * Action used to push a new {@link folderSelectCard} on the card stack.
+ * 
+ * @param {GoogleAppsScript.Addons.EventObject} e Google event object, with parameters to build the card:
+ * 
+ * parentId - The id of the folder to display.
+ * 
+ * driveId - The id of the shared drive where the folder is, or 'roor' if in MyDrive.
+ * 
+ * folderName - The name of the folder to display.
+ * 
+ * reverseOrder - false -> A-Z, true -> Z-A
+ * 
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse} Response that pushes card on the stack
  */
 function showFolders(e) {
     console.log(e);
