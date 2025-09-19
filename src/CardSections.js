@@ -66,9 +66,6 @@ function reloadButton(text, cardGenerator, args = []) {
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED);
 }
 
-
-
-
 /**
  * @param {object} e
  * @returns {GoogleAppsScript.Card_Service.ActionResponse}
@@ -87,5 +84,55 @@ function reloadCallback(e) {
 
     return CardService.newActionResponseBuilder()
         .setNavigation(CardService.newNavigation().updateCard(card))
+        .build();
+}
+
+/**
+ * Drive widget to select ordering (A-Z) or (Z-A) for the list of folders.
+ * 
+ * @param {string} parentId
+ * @param {string} driveId
+ * @param {string} folderName
+ * @param {boolean} reverseOrder Swap from A-Z to Z-A
+ * @returns {GoogleAppsScript.Card_Service.CardSection} Widget showing the sort order A-Z or Z-A
+ */
+function orderSection(parentId, driveId, folderName, reverseOrder) {
+    let orderText = 'A-Z';
+    let orderImage = 'arrow_downward';
+    if (reverseOrder) {
+        orderText = 'Z-A';
+        orderImage = 'arrow_upward';
+    }
+
+    const orderWidget = CardService.newDecoratedText()
+        .setText(`Orden: <b>${orderText}</b>`)
+        .setBottomLabel('<i>Selecciona para invertir</i>')
+        .setStartIcon(CardService.newIconImage()
+            .setIcon(CardService.Icon.NONE))
+        .setEndIcon(CardService.newIconImage().setMaterialIcon(CardService.newMaterialIcon()
+            .setName(orderImage)
+            .setGrade(200)))
+        .setOnClickAction(CardService.newAction()
+            .setFunctionName(handleOrderSwitch.name)
+            .setParameters({ parentId, driveId, folderName, reverseOrder: (!reverseOrder).toString() }));
+    return CardService.newCardSection().addWidget(orderWidget);
+}
+
+/**
+ * Callback for {@link orderSection} to reload {@link folderSelectCard}
+ * 
+ * @param {GoogleAppsScript.Addons.EventObject} e
+ */
+function handleOrderSwitch(e) {
+    const parentId = e.commonEventObject.parameters.parentId;
+    const driveId = e.commonEventObject.parameters.driveId;
+    const folderName = e.commonEventObject.parameters.folderName;
+    const reverseOrder = e.commonEventObject.parameters.reverseOrder === 'true';
+
+    const card = folderSelectCard(parentId, driveId, folderName, reverseOrder);
+
+    return CardService.newActionResponseBuilder()
+        .setNavigation(CardService.newNavigation()
+            .updateCard(card))
         .build();
 }

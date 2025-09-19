@@ -1,8 +1,8 @@
 /**
  * Main function called when the user opens the app in Drive.
  * 
- * @param {GoogleAppsScript.Addons.EventObject} e
- * @returns {GoogleAppsScript.Card_Service.Card} The main card to display to the user.
+ * @param {GoogleAppsScript.Addons.EventObject} e Default Google event
+ * @returns {GoogleAppsScript.Card_Service.Card} {@link driveSelectCard}
  */
 function onDriveHomepage(e) {
     console.log(e);
@@ -13,78 +13,40 @@ function onDriveHomepage(e) {
 /**
 * Main function when the user selects an item on Drive
 
-* @param {GoogleAppsScript.Addons.EventObject} e
-* @return {GoogleAppsScript.Card_Service.Card} The card to show to the user.
+* @param {GoogleAppsScript.Addons.EventObject} e Default Google event
+* @return {GoogleAppsScript.Card_Service.Card} {@link folderSelectCard}
 */
 function onDriveItemsSelected(e) {
     console.log(e);
 
-    const selectedFileId = e.drive.selectedItems[0].id;
-    const selectedFileDriveId = Drive.Files.get(selectedFileId, { supportsAllDrives: true }).driveId || 'root';
-
-    console.log('Selected file driveId: ', selectedFileDriveId);
-
-    /** @type {{title:string}[]} */
-    var items = e.drive.selectedItems;
-    // Include at most 5 items in the text.
-    items = items.slice(0, 5);
-    var text = items.map(function (item) {
-        var title = item.title;
-        // If neccessary, truncate the title to fit in the image.
-        title = sanitize(title);
-        return title;
-    }).join('\n');
-    return createCatCard(text);
-}
-
-/**
- * Widget to select ordering (A-Z) or (Z-A) for the list of folders.
- * 
- * @param {string} parentId
- * @param {string} driveId
- * @param {string} folderName
- * @param {boolean} reverseOrder Swap from A-Z to Z-A
- * @returns {GoogleAppsScript.Card_Service.CardSection} Widget showing the sort order A-Z or Z-A
- */
-function orderSection(parentId, driveId, folderName, reverseOrder) {
-    let orderText = 'A-Z';
-    let orderImage = 'arrow_downward';
-    if (reverseOrder) {
-        orderText = 'Z-A';
-        orderImage = 'arrow_upward';
+    const params = {
+        supportsAllDrives: true,
+        fields: 'name, driveId, parents, mimeType',
     }
 
-    const orderWidget = CardService.newDecoratedText()
-        .setText(`Orden: <b>${orderText}</b>`)
-        .setBottomLabel('<i>Selecciona para invertir</i>')
-        .setStartIcon(CardService.newIconImage()
-            .setIcon(CardService.Icon.NONE))
-        .setEndIcon(CardService.newIconImage().setMaterialIcon(CardService.newMaterialIcon()
-            .setName(orderImage)
-            .setGrade(200)))
-        .setOnClickAction(CardService.newAction()
-            .setFunctionName(handleOrderSwitch.name)
-            .setParameters({ parentId, driveId, folderName, reverseOrder: (!reverseOrder).toString() }));
-    return CardService.newCardSection().addWidget(orderWidget);
+    const selectedFileId = e.drive.selectedItems[0].id;
+    const selectedFile = Drive.Files.get(selectedFileId, params)
+
+    const driveId = selectedFile.driveId || 'root';
+
+    const isFolder = selectedFile.mimeType === 'application/vnd.google-apps.folder';
+
+    let parentId = selectedFileId;
+    let folderName = selectedFile.name;
+
+    if (!isFolder) {
+        parentId = selectedFile.parents[0];
+        folderName = Drive.Files.get(parentId, {supportsAllDrives: true, fields: 'name'}).name;
+    }
+
+    return folderSelectCard(parentId, driveId, folderName, false);
 }
 
 /**
- * @param {GoogleAppsScript.Addons.EventObject} e
+ * Card for the user to selct the drive they want to use.
+ * 
+ * @returns {GoogleAppsScript.Card_Service.Card} A drive selection card.
  */
-function handleOrderSwitch(e) {
-    const parentId = e.commonEventObject.parameters.parentId;
-    const driveId = e.commonEventObject.parameters.driveId;
-    const folderName = e.commonEventObject.parameters.folderName;
-    const reverseOrder = e.commonEventObject.parameters.reverseOrder === 'true';
-
-    const card = folderSelectCard(parentId, driveId, folderName, reverseOrder);
-
-    return CardService.newActionResponseBuilder()
-        .setNavigation(CardService.newNavigation()
-            .updateCard(card))
-        .build();
-}
-
 function driveSelectCard() {
     const myDriveWidget = CardService.newDecoratedText()
         .setText('Mi Unidad')
@@ -122,6 +84,7 @@ function driveSelectCard() {
 }
 
 /**
+ * 
  * @param {string} parentId
  * @param {boolean} files
  * @returns {string} The query for Drive API
@@ -135,10 +98,12 @@ function query(parentId, files) {
  */
 function fileCountWidget(fileCount) {
     let icon = 'file_copy';
-    let text = `<b>${fileCount}</b> archivos`;
-    if (fileCount == 0) {
+    let text = `<b>${fileCount}</b> otros archivos`;
+    if (fileCount == 1) {
+        text = 'Un único archivo dentro';
+    } else if (fileCount == 0) {
         icon = 'file_copy_off';
-        text = 'Carpeta <b>vacía</b>'
+        text = 'Carpeta <b>vacía</b>';
     }
     return CardService.newDecoratedText()
         .setText(text)
@@ -156,23 +121,35 @@ function fileCountWidget(fileCount) {
  * @param {boolean} reverseOrder
  */
 function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
+    const q = `trashed = false and '${parentId}' in parents`;
     const corpora = driveId === 'root' ? 'user' : 'drive'
     const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
     const params = {
+        q,
         corpora,
         orderBy,
         pagesize: 100,
         includeItemsFromAllDrives: true,
         supportsAllDrives: true,
-        fields: 'files(name,id,driveId,capabilities(canRename,canEdit,canTrash,canAddChildren,canModifyContent,canRemoveChildren))'
+        fields: 'files(name,id,driveId,mimeType)' //,capabilities(canRename,canEdit,canTrash,canAddChildren,canModifyContent,canRemoveChildren))'
     }
     if (corpora === 'drive') {
         params.driveId = driveId;
     }
 
-    const files = Drive.Files.list({ ...params, q: query(parentId, true), fields: 'files(id)' }).files;
-    const folders = Drive.Files.list({ ...params, q: query(parentId, false) }).files;
+    const allFiles = Drive.Files.list(params).files;
 
+    /** @type {GoogleAppsScript.Drive_v3.Drive.V3.Schema.File[]} */
+    const folders = [];
+    const otherFiles = [];
+
+    for( const f of allFiles ) {
+        if(f.mimeType === 'application/vnd.google-apps.folder') {
+            folders.push(f);
+        } else {
+            otherFiles.push(f);
+        }
+    }
 
     const foldersSection = CardService.newCardSection()
         .addWidget(CardService.newDecoratedText()
@@ -182,7 +159,7 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
                 .setMaterialIcon(CardService.newMaterialIcon()
                     .setName('folder_eye'))))
         .addWidget(CardService.newDivider())
-        .addWidget(fileCountWidget(files.length))
+        .addWidget(fileCountWidget(otherFiles.length))
         .addWidget(CardService.newDivider());
 
 
