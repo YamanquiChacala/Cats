@@ -29,6 +29,12 @@ function onDriveItemsSelected(e) {
 
     const driveId = selectedFile.driveId || 'root';
 
+    let driveName = 'Mi Unidad';
+    if(driveId !== 'root') {
+        params.fields = 'name';
+        driveName = Drive.Drives.get(driveId, params).name;
+    }
+
     const isFolder = selectedFile.mimeType === 'application/vnd.google-apps.folder';
 
     let parentId = selectedFileId;
@@ -39,7 +45,7 @@ function onDriveItemsSelected(e) {
         folderName = Drive.Files.get(parentId, { supportsAllDrives: true, fields: 'name' }).name;
     }
 
-    return folderSelectCard(parentId, driveId, folderName, false);
+    return folderSelectCard(parentId, driveId, folderName, driveName, false);
 }
 
 /**
@@ -56,7 +62,7 @@ function driveSelectCard() {
                 .setName('home_and_garden')))
         .setOnClickAction(CardService.newAction()
             .setFunctionName(showFolders.name)
-            .setParameters({ parentId: 'root', driveId: 'root', folderName: 'Mi Unidad', reverseOrder: 'false' }));
+            .setParameters({ parentId: 'root', driveId: 'root', folderName: 'Mi Unidad', driveName: 'Mi Unidad', reverseOrder: 'false' }));
 
     const drivesSection = CardService.newCardSection()
         .addWidget(myDriveWidget)
@@ -72,7 +78,7 @@ function driveSelectCard() {
                     .setName('folder_shared')))
             .setOnClickAction(CardService.newAction()
                 .setFunctionName(showFolders.name)
-                .setParameters({ parentId: drive.id, driveId: drive.id, folderName: drive.name, reverseOrder: 'false' }));
+                .setParameters({ parentId: drive.id, driveId: drive.id, folderName: drive.name, driveName: drive.name, reverseOrder: 'false' }));
         drivesSection.addWidget(widget);
     });
 
@@ -91,10 +97,11 @@ function driveSelectCard() {
  * @param {string} parentId The folder being shown
  * @param {string} driveId The Drive the folder belongs to
  * @param {string} folderName The name of the folder being shown
+ * @param {string} driveName The name of the Shared Drive
  * @param {boolean} reverseOrder false A-Z, true Z-A
  * @returns {GoogleAppsScript.Card_Service.Card}
  */
-function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
+function folderSelectCard(parentId, driveId, folderName, driveName, reverseOrder) {
     const q = `trashed = false and '${parentId}' in parents`;
     const corpora = driveId === 'root' ? 'user' : 'drive'
     const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
@@ -105,39 +112,46 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
         pagesize: 100,
         includeItemsFromAllDrives: true,
         supportsAllDrives: true,
-        fields: 'files(name,id,driveId,mimeType)' //,capabilities(canRename,canEdit,canTrash,canAddChildren,canModifyContent,canRemoveChildren))'
+        fields: 'files(name,id,driveId,mimeType),nextPageToken' //,capabilities(canRename,canEdit,canTrash,canAddChildren,canModifyContent,canRemoveChildren))'
     }
     if (corpora === 'drive') {
         params.driveId = driveId;
     }
 
-    const allFiles = Drive.Files.list(params).files;
+    const queryResult = Drive.Files.list(params)
+    const nextPageToken = queryResult.nextPageToken;
+    const allFiles = queryResult.files;
 
     /** @type {GoogleAppsScript.Drive_v3.Drive.V3.Schema.File[]} */
     const folders = [];
-    const otherFiles = [];
+    let tooManyFolders = !!queryResult.nextPageToken
+    let otherFilesCount = 0;
 
     for (const f of allFiles) {
         if (f.mimeType === 'application/vnd.google-apps.folder') {
-            folders.push(f);
+            if(folders.length < 30) {
+                folders.push(f);
+            } else if(!tooManyFolders) {
+                tooManyFolders = true;
+            }
         } else {
-            otherFiles.push(f);
+            otherFilesCount ++;
         }
     }
 
     const currentFolderSection = CardService.newCardSection()
         .addWidget(CardService.newDecoratedText()
             .setText(`<b>${folderName}</b>`)
-            .setBottomLabel('Carpeta actual')
+            .setBottomLabel(`Carpeta en ${driveName}`)
             .setStartIcon(CardService.newIconImage()
                 .setMaterialIcon(CardService.newMaterialIcon()
                     .setName('folder_eye'))))
-        .addWidget(fileCountDecoratedText(otherFiles.length))
+        .addWidget(fileCountDecoratedText(otherFilesCount))
 
     const foldersSection = CardService.newCardSection()
         .setCollapsible(true)
         .setNumUncollapsibleWidgets(0)
-        .setHeader(`<b>${folders.length} Carpeta${folders.length > 1 ? 's' : ''}</b>`);
+        .setHeader(`<b>${tooManyFolders ? 'Mas de' : ''}${folders.length} Carpeta${folders.length > 1 ? 's' : ''}</b>`);
 
     folders.forEach((folder) => {
         const widget = CardService.newDecoratedText()
@@ -147,7 +161,7 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
                     .setName('folder')))
             .setOnClickAction(CardService.newAction()
                 .setFunctionName(showFolders.name)
-                .setParameters({ parentId: folder.id, driveId, folderName: folder.name, reverseOrder: reverseOrder.toString() }));
+                .setParameters({ parentId: folder.id, driveId, folderName: folder.name, driveName, reverseOrder: reverseOrder.toString() }));
         foldersSection.addWidget(widget);
     });
 
@@ -156,6 +170,7 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
         .addSection(currentFolderSection)
         .addSection(orderSection(parentId, driveId, folderName, reverseOrder))
         .setFixedFooter(cardFooter())
+        .setPeekCardHeader(catHeader(folderName, `En ${driveName}`, 'naranja', false));
 
     if (folders.length > 0) {
         card.addSection(foldersSection)
@@ -175,6 +190,8 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
  * 
  * folderName - The name of the folder to display.
  * 
+ * diverName - The name of the Shared Drive, or "My Drive"
+ * 
  * reverseOrder - false -> A-Z, true -> Z-A
  * 
  * @returns {GoogleAppsScript.Card_Service.ActionResponse} Response that pushes card on the stack
@@ -184,9 +201,10 @@ function showFolders(e) {
     const parentId = e.commonEventObject.parameters.parentId;
     const driveId = e.commonEventObject.parameters.driveId;
     const folderName = e.commonEventObject.parameters.folderName;
+    const driveName = e.commonEventObject.parameters.driveName;
     const reverseOrder = e.commonEventObject.parameters.reverseOrder === 'true';
 
-    const card = folderSelectCard(parentId, driveId, folderName, reverseOrder);
+    const card = folderSelectCard(parentId, driveId, folderName, driveName, reverseOrder);
 
     return CardService.newActionResponseBuilder()
         .setNavigation(CardService.newNavigation()

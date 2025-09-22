@@ -1,13 +1,20 @@
 /**
  * @param {string} title The title on the header
  * @param {string} [subtitle] The subtitle on the header
+ * @param {string} [icon] The name of the image to use as icon. A file called <icon>_48.png should exist in images folder.
+ * @param {boolean} [circle] Crop the icon into a circle? Defaults to true.
  * @returns {GoogleAppsScript.Card_Service.CardHeader} The header, ready to insert on a Card
  */
-function catHeader(title, subtitle) {
+function catHeader(title, subtitle, icon='icon', circle=true) {
+    const imageURL = `https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/${icon}_48.png`;
+    let imageStyle = CardService.ImageStyle.SQUARE;
+    if (circle) {
+        imageStyle = CardService.ImageStyle.CIRCLE;
+    }
     const header = CardService.newCardHeader()
         .setTitle(title)
-        .setImageUrl('https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/icon_48.png')
-        .setImageStyle(CardService.ImageStyle.CIRCLE);
+        .setImageUrl(imageURL)
+        .setImageStyle(imageStyle);
     if (subtitle) {
         header.setSubtitle(subtitle);
     }
@@ -150,9 +157,10 @@ function handleOrderSwitch(e) {
     const parentId = e.commonEventObject.parameters.parentId;
     const driveId = e.commonEventObject.parameters.driveId;
     const folderName = e.commonEventObject.parameters.folderName;
+    const driveName = e.commonEventObject.parameters.driveName;
     const reverseOrder = e.commonEventObject.parameters.reverseOrder === 'true';
 
-    const card = folderSelectCard(parentId, driveId, folderName, reverseOrder);
+    const card = folderSelectCard(parentId, driveId, folderName, driveName, reverseOrder);
 
     return CardService.newActionResponseBuilder()
         .setNavigation(CardService.newNavigation()
