@@ -95,7 +95,7 @@ function reloadCallback(e) {
  */
 function fileCountDecoratedText(fileCount) {
     let icon = 'file_copy';
-    let text = `<b>${fileCount}</b> otros archivos`;
+    let text = `<b>${fileCount}</b> archivos extra`;
     if (fileCount == 1) {
         text = 'Un único archivo dentro';
     } else if (fileCount == 0) {

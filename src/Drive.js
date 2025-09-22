@@ -36,7 +36,7 @@ function onDriveItemsSelected(e) {
 
     if (!isFolder) {
         parentId = selectedFile.parents[0];
-        folderName = Drive.Files.get(parentId, {supportsAllDrives: true, fields: 'name'}).name;
+        folderName = Drive.Files.get(parentId, { supportsAllDrives: true, fields: 'name' }).name;
     }
 
     return folderSelectCard(parentId, driveId, folderName, false);
@@ -117,8 +117,8 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
     const folders = [];
     const otherFiles = [];
 
-    for( const f of allFiles ) {
-        if(f.mimeType === 'application/vnd.google-apps.folder') {
+    for (const f of allFiles) {
+        if (f.mimeType === 'application/vnd.google-apps.folder') {
             folders.push(f);
         } else {
             otherFiles.push(f);
@@ -134,7 +134,10 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
                     .setName('folder_eye'))))
         .addWidget(fileCountDecoratedText(otherFiles.length))
 
-    const foldersSection = CardService.newCardSection();
+    const foldersSection = CardService.newCardSection()
+        .setCollapsible(true)
+        .setNumUncollapsibleWidgets(0)
+        .setHeader(`<b>${folders.length} Carpeta${folders.length > 1 ? 's' : ''}</b>`);
 
     folders.forEach((folder) => {
         const widget = CardService.newDecoratedText()
@@ -151,12 +154,13 @@ function folderSelectCard(parentId, driveId, folderName, reverseOrder) {
     const card = CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
         .addSection(currentFolderSection)
+        .addSection(orderSection(parentId, driveId, folderName, reverseOrder))
         .setFixedFooter(cardFooter())
-    
+
     if (folders.length > 0) {
         card.addSection(foldersSection)
     }
-    
+
     return card.build()
 }
 
