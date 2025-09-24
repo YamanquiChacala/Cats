@@ -82,15 +82,32 @@ function driveSelectCard() {
         drivesSection.addWidget(widget);
     });
 
+    const input2 = CardService.newCardSection()
+        .addWidget(CardService.newTextInput()
+            .setFieldName('test3')
+            .setTitle('Historia')
+            .setHint('Tu historia')
+            .setMultiline(true)
+            .setValidation(CardService.newValidation()
+                .setCharacterLimit(100)
+                .setInputType(CardService.InputType.TEXT)))
+        .addWidget(CardService.newDateTimePicker()
+            .setFieldName('test4')
+            .setTitle('Cumpleaños')
+            .setValueInMsSinceEpoch(Date.now())
+            .setTimeZoneOffsetInMins(-25200/60))
+
     const input = CardService.newCardSection()
         .addWidget(CardService.newTextInput()
             .setFieldName('test')
+            .setTitle('Edad')
+            .setHint('Número entero')
             .setValidation(CardService.newValidation()
                 .setCharacterLimit(10)
                 .setInputType(CardService.InputType.INTEGER)))
         .addWidget(CardService.newSelectionInput()
             .setFieldName('test2')
-            .setType(CardService.SelectionInputType.CHECK_BOX)
+            .setType(CardService.SelectionInputType.SWITCH)
             .setTitle('Selecciona')
             .addItem('opcion 1', 1, false)
             .addItem('opcion 2', 'dos', true)
@@ -104,6 +121,7 @@ function driveSelectCard() {
     return CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
         .addSection(drivesSection)
+        .addSection(input2)
         .addSection(input)
         .setFixedFooter(cardFooter())
         .build();
@@ -115,7 +133,7 @@ function driveSelectCard() {
  */
 function testCallback(e) {
     console.log(e);
-    console.log('Valor: ', e.commonEventObject.formInputs.test2.stringInputs.value);
+    console.log('Fecha y hora: ', e.commonEventObject.formInputs.test4.dateTimeInput);
 
     return CardService.newActionResponseBuilder()
         .setNotification(CardService.newNotification()
