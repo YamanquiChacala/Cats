@@ -30,7 +30,7 @@ function onDriveItemsSelected(e) {
     const driveId = selectedFile.driveId || 'root';
 
     let driveName = 'Mi Unidad';
-    if(driveId !== 'root') {
+    if (driveId !== 'root') {
         params.fields = 'name';
         driveName = Drive.Drives.get(driveId, params).name;
     }
@@ -82,9 +82,17 @@ function driveSelectCard() {
         drivesSection.addWidget(widget);
     });
 
+    const input = CardService.newCardSection()
+        .addWidget(CardService.newTextInput()
+            .setFieldName('test')
+            .setValidation(CardService.newValidation()
+                .setCharacterLimit(10)
+                .setInputType(CardService.InputType.INTEGER)));
+
     return CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
         .addSection(drivesSection)
+        .addSection(input)
         .setFixedFooter(cardFooter())
         .build();
 }
@@ -129,13 +137,13 @@ function folderSelectCard(parentId, driveId, folderName, driveName, reverseOrder
 
     for (const f of allFiles) {
         if (f.mimeType === 'application/vnd.google-apps.folder') {
-            if(folders.length < 30) {
+            if (folders.length < 30) {
                 folders.push(f);
-            } else if(!tooManyFolders) {
+            } else if (!tooManyFolders) {
                 tooManyFolders = true;
             }
         } else {
-            otherFilesCount ++;
+            otherFilesCount++;
         }
     }
 
