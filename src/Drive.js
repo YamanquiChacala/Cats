@@ -87,13 +87,39 @@ function driveSelectCard() {
             .setFieldName('test')
             .setValidation(CardService.newValidation()
                 .setCharacterLimit(10)
-                .setInputType(CardService.InputType.INTEGER)));
+                .setInputType(CardService.InputType.INTEGER)))
+        .addWidget(CardService.newSelectionInput()
+            .setFieldName('test2')
+            .setType(CardService.SelectionInputType.CHECK_BOX)
+            .setTitle('Selecciona')
+            .addItem('opcion 1', 1, false)
+            .addItem('opcion 2', 'dos', true)
+            .addItem('opcion 3', false, false))
+        .addWidget(CardService.newTextButton()
+            .setText("Probar")
+            .setOnClickAction(CardService.newAction()
+                .setFunctionName('testCallback')
+                .setAllWidgetsAreRequired(true)));
 
     return CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
         .addSection(drivesSection)
         .addSection(input)
         .setFixedFooter(cardFooter())
+        .build();
+}
+
+/**
+ * 
+ * @param {GoogleAppsScript.Addons.EventObject} e 
+ */
+function testCallback(e) {
+    console.log(e);
+    console.log('Valor: ', e.commonEventObject.formInputs.test2.stringInputs.value);
+
+    return CardService.newActionResponseBuilder()
+        .setNotification(CardService.newNotification()
+            .setText('Respuesta del questionario'))
         .build();
 }
 
