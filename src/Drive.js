@@ -82,15 +82,42 @@ function driveSelectCard() {
         drivesSection.addWidget(widget);
     });
 
+    const url = 'https://cataas.com/api/tags';
+    const response = UrlFetchApp.fetch(url);
+    const jsonText = response.getContentText();
+    /** @type {[string]} */
+    const fullData = JSON.parse(jsonText);
+    const sampleSet = new Set(['cute', 'orange', 'kitten', 'small']);
+
+    while(sampleSet.size < 20){
+        sampleSet.add(fullData[Math.floor(Math.random() * fullData.length)]);
+    }
+
+    const sample = Array.from(sampleSet);
+
+    console.log(sample);
+
+    const selectionInput = CardService.newSelectionInput()
+        .setFieldName('tags')
+        .setType(CardService.SelectionInputType.MULTI_SELECT)
+        .setTitle('Cat Tag');
+    
+    sample.forEach(tag => {
+        selectionInput.addItem(tag, tag, false);
+    });
+
     const input2 = CardService.newCardSection()
         .addWidget(CardService.newTextInput()
             .setFieldName('test3')
             .setTitle('Historia')
             .setHint('Tu historia')
+            .setSuggestions(CardService.newSuggestions()
+                .addSuggestions(sample))
             .setMultiline(true)
             .setValidation(CardService.newValidation()
                 .setCharacterLimit(100)
                 .setInputType(CardService.InputType.TEXT)))
+        .addWidget(selectionInput)
         .addWidget(CardService.newDateTimePicker()
             .setFieldName('test4')
             .setTitle('Cumpleaños')
@@ -107,7 +134,7 @@ function driveSelectCard() {
                 .setInputType(CardService.InputType.INTEGER)))
         .addWidget(CardService.newSelectionInput()
             .setFieldName('test2')
-            .setType(CardService.SelectionInputType.SWITCH)
+            .setType(CardService.SelectionInputType.DROPDOWN)
             .setTitle('Selecciona')
             .addItem('opcion 1', 1, false)
             .addItem('opcion 2', 'dos', true)
@@ -115,8 +142,8 @@ function driveSelectCard() {
         .addWidget(CardService.newTextButton()
             .setText("Probar")
             .setOnClickAction(CardService.newAction()
-                .setFunctionName('testCallback')
-                .setAllWidgetsAreRequired(true)));
+                //.setAllWidgetsAreRequired(true)
+                .setFunctionName('testCallback')));
 
     return CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
@@ -124,6 +151,34 @@ function driveSelectCard() {
         .addSection(input2)
         .addSection(input)
         .setFixedFooter(cardFooter())
+        .build();
+}
+
+/**
+ * 
+ * @param {GoogleAppsScript.Addons.EventObject} e 
+ * @returns {GoogleAppsScript.Card_Service.SuggestionsResponse}
+ */
+function provideCatTagsOptions(e) {
+    console.log(e);
+
+    const url = 'https://cataas.com/api/tags';
+    const response = UrlFetchApp.fetch(url);
+    const jsonText = response.getContentText();
+    /** @type {[string]} */
+    const fullData = JSON.parse(jsonText);
+
+    for( let i=fullData.length -1; i>0; i--) {
+        const j = Math.floor(Math.random() * (i+1));
+        [fullData[i], fullData[j]] = [fullData[j], fullData[i]];
+    }
+
+    const sample = fullData.slice(0,10);
+
+    const suggestions = CardService.newSuggestions().addSuggestions(sample);
+
+    return CardService.newSuggestionsResponseBuilder()
+        .setSuggestions(suggestions)
         .build();
 }
 
