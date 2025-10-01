@@ -87,13 +87,21 @@ function driveSelectCard() {
     const jsonText = response.getContentText();
     /** @type {[string]} */
     const fullData = JSON.parse(jsonText);
-    const sampleSet = new Set(['cute', 'orange', 'kitten', 'small']);
+    const sampleSize = 20;
+    const sample = ['cute', 'kitten', 'orange', 'small'];
+    const lowercaseTracker = new Set(sample);
 
-    while(sampleSet.size < 20){
-        sampleSet.add(fullData[Math.floor(Math.random() * fullData.length)]);
+    while (sample.length < sampleSize) {
+        const randomIndex = Math.floor(Math.random() * fullData.length);
+        const randomElement = fullData[randomIndex];
+        const lowercaseRandomElement = randomElement.toLowerCase();
+        if (!lowercaseTracker.has(lowercaseRandomElement)) {
+            sample.push(randomElement);
+            lowercaseTracker.add(lowercaseRandomElement);
+        }
     }
 
-    const sample = Array.from(sampleSet);
+    sample.sort();
 
     console.log(sample);
 
@@ -101,9 +109,10 @@ function driveSelectCard() {
         .setFieldName('tags')
         .setType(CardService.SelectionInputType.MULTI_SELECT)
         .setTitle('Cat Tag');
-    
+
     sample.forEach(tag => {
-        selectionInput.addItem(tag, tag, false);
+        selectionInput.addMultiSelectItem(tag, tag, false, 'https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/white_48.png', 'Tipo de gato');
+        //selectionInput.addItem(tag, tag, false);
     });
 
     const input2 = CardService.newCardSection()
@@ -122,7 +131,7 @@ function driveSelectCard() {
             .setFieldName('test4')
             .setTitle('Cumpleaños')
             .setValueInMsSinceEpoch(Date.now())
-            .setTimeZoneOffsetInMins(-25200/60))
+            .setTimeZoneOffsetInMins(-25200 / 60))
 
     const input = CardService.newCardSection()
         .addWidget(CardService.newTextInput()
@@ -168,12 +177,12 @@ function provideCatTagsOptions(e) {
     /** @type {[string]} */
     const fullData = JSON.parse(jsonText);
 
-    for( let i=fullData.length -1; i>0; i--) {
-        const j = Math.floor(Math.random() * (i+1));
+    for (let i = fullData.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
         [fullData[i], fullData[j]] = [fullData[j], fullData[i]];
     }
 
-    const sample = fullData.slice(0,10);
+    const sample = fullData.slice(0, 10);
 
     const suggestions = CardService.newSuggestions().addSuggestions(sample);
 
