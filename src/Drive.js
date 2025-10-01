@@ -111,7 +111,12 @@ function driveSelectCard() {
         .setTitle('Cat Tag');
 
     sample.forEach(tag => {
-        selectionInput.addMultiSelectItem(tag, tag, false, 'https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/white_48.png', 'Tipo de gato');
+        selectionInput.addMultiSelectItem(
+            capitalize(tag),
+            tag,
+            false,
+            '',
+            generateCuriousPhrase());
         //selectionInput.addItem(tag, tag, false);
     });
 
