@@ -51,7 +51,7 @@ function generateCuriousPhrase() {
   const structures = [
     `${intro} ${persuation}`,
     `${persuation} ${closer}`,
-    `${intro} ${persuation} ${closer}`,
+    `${intro} ${closer}`,
   ];
 
   return getRandomElement(structures);
@@ -84,17 +84,17 @@ const phraseParts = {
     "Soy el más rápido.",
     "Te divertirás.",
     "Funciono perfecto.",
-    "¡No te arrepentirás!",
+    "¡No lo lamentarás!",
     "Soy impecable.",
     "¿Por qué no me yo?",
   ],
   closers: [
-    "¡Lo prometo!",
+    "¡Prometido!",
     "¿Sí?",
     "¡Escógeme!",
     "¿Qué dices?",
     "¡Por favor!",
-    "Es el destino",
+    "Es destino.",
   ],
   specialPhrases: [
     "¡Soy el elemento 👑 del grupo!",
