@@ -1,7 +1,7 @@
 const MAX_CAPTION_LENGTH = 40;
 
 const CARD_GENERATORS = {
-  createCatCard,
+    createCatCard,
 };
 
 /**
@@ -10,11 +10,11 @@ const CARD_GENERATORS = {
  * @return {string} The fixed message.
  */
 function sanitize(caption) {
-  if (caption.length > MAX_CAPTION_LENGTH) {
-    caption = caption.slice(0, MAX_CAPTION_LENGTH);
-    caption = caption.slice(0, regexLastIndexOf(caption, /[:;\-_.,\n ] */g)) + '...';
-  }
-  return encodeURIComponent(caption);
+    if (caption.length > MAX_CAPTION_LENGTH) {
+        caption = caption.slice(0, MAX_CAPTION_LENGTH);
+        caption = caption.slice(0, regexLastIndexOf(caption, /[:;\-_.,\n ] */g)) + '...';
+    }
+    return encodeURIComponent(caption);
 }
 
 /**
@@ -23,16 +23,16 @@ function sanitize(caption) {
  * @returns {string}
  */
 function capitalize(str) {
-  if (!str) return '';
+    if (!str) return '';
 
-  const lowerStr = str.toLowerCase();
+    const lowerStr = str.toLowerCase();
 
-  return lowerStr.split(' ').map(word => {
-    if (word.length === 0) return '';
-    const firstLetter = word.charAt(0).toUpperCase();
-    const restOfWord = word.slice(1);
-    return firstLetter + restOfWord;
-  }).join(' ');
+    return lowerStr.split(' ').map(word => {
+        if (word.length === 0) return '';
+        const firstLetter = word.charAt(0).toUpperCase();
+        const restOfWord = word.slice(1);
+        return firstLetter + restOfWord;
+    }).join(' ');
 }
 
 /**
@@ -40,21 +40,21 @@ function capitalize(str) {
  * @returns {string}
  */
 function generateCuriousPhrase() {
-  if (Math.random() < 0.2) {
-    return getRandomElement(phraseParts.specialPhrases);
-  }
+    if (Math.random() < 0.2) {
+        return getRandomElement(phraseParts.specialPhrases);
+    }
 
-  const intro = getRandomElement(phraseParts.intros);
-  const persuation = getRandomElement(phraseParts.persuations);
-  const closer = getRandomElement(phraseParts.closers);
+    const intro = getRandomElement(phraseParts.intros);
+    const persuation = getRandomElement(phraseParts.persuations);
+    const closer = getRandomElement(phraseParts.closers);
 
-  const structures = [
-    `${intro} ${persuation}`,
-    `${persuation} ${closer}`,
-    `${intro} ${closer}`,
-  ];
+    const structures = [
+        `${intro} ${persuation}`,
+        `${persuation} ${closer}`,
+        `${intro} ${closer}`,
+    ];
 
-  return getRandomElement(structures);
+    return getRandomElement(structures);
 }
 
 /**
@@ -62,45 +62,45 @@ function generateCuriousPhrase() {
  * @param {RegExp} regex
  */
 function regexLastIndexOf(str, regex) {
-  let lastIndex = -1;
-  const matches = str.matchAll(regex);
+    let lastIndex = -1;
+    const matches = str.matchAll(regex);
 
-  for (const match of matches) {
-    lastIndex = match.index;
-  }
-  return lastIndex;
+    for (const match of matches) {
+        lastIndex = match.index;
+    }
+    return lastIndex;
 }
 
 const phraseParts = {
-  intros: [
-    "Elígeme,",
-    "¡Yo!",
-    "Hola,",
-    "Mírame,",
-    "¡Aquí!",
-    "Psst...",
-  ],
-  persuations: [
-    "Soy el más rápido.",
-    "Te divertirás.",
-    "Funciono perfecto.",
-    "¡No lo lamentarás!",
-    "Soy impecable.",
-    "¿Por qué no me yo?",
-  ],
-  closers: [
-    "¡Prometido!",
-    "¿Sí?",
-    "¡Escógeme!",
-    "¿Qué dices?",
-    "¡Por favor!",
-    "Es destino.",
-  ],
-  specialPhrases: [
-    "¡Soy el elemento 👑 del grupo!",
-    "Tengo los bits de la suerte.",
-    "¡Hazle caso a tu intuición!",
-  ]
+    intros: [
+        "Elígeme,",
+        "¡Yo!",
+        "Hola,",
+        "Mírame,",
+        "¡Aquí!",
+        "Psst...",
+    ],
+    persuations: [
+        "Soy el más rápido.",
+        "Te divertirás.",
+        "Funciono perfecto.",
+        "¡No lo lamentarás!",
+        "Soy impecable.",
+        "¿Por qué no me yo?",
+    ],
+    closers: [
+        "¡Prometido!",
+        "¿Sí?",
+        "¡Escógeme!",
+        "¿Qué dices?",
+        "¡Por favor!",
+        "Es destino.",
+    ],
+    specialPhrases: [
+        "¡Soy el elemento 👑 del grupo!",
+        "Tengo los bits de la suerte.",
+        "¡Hazle caso a tu intuición!",
+    ]
 }
 
 /**
@@ -110,6 +110,6 @@ const phraseParts = {
  * @returns {T} The randomly selected element.
  */
 function getRandomElement(arr) {
-  const randomIndex = Math.floor(Math.random() * arr.length);
-  return arr[randomIndex];
+    const randomIndex = Math.floor(Math.random() * arr.length);
+    return arr[randomIndex];
 }
