@@ -7,7 +7,70 @@
 function onDriveHomepage(e) {
     console.log(e);
 
+    return catImageCard(e);
     return driveSelectCard();
+}
+
+/**
+ * 
+ * @param {GoogleAppsScript.Addons.EventObject} e 
+ * @returns 
+ */
+function catImageCard(e) {
+
+    const mensaje = '';
+    const messageTextInput = CardService.newTextInput()
+        .setFieldName('message')
+        .setTitle('Mensaje')
+        .setHint('¿Qué dice el gato?')
+        .setValue(mensaje)
+        .setValidation(CardService.newValidation()
+            .setInputType(CardService.InputType.TEXT)
+            .setCharacterLimit(40));
+
+    const fontOptions = [
+        { text: '🐵 Ándale', value: 'Andale Mono' },
+        { text: '💥 ¡Impacto!', value: 'Impact' },
+        { text: '💤 Arial', value: 'Arial' },
+        { text: '💤 Arial Negrillas', value: 'Arial Black' },
+        { text: '💬 Comic', value: 'Comic Sans MS' },
+        { text: '🤖 Courier', value: 'Courier New' },
+        { text: '🌹 Georgia', value: 'Georgia' },
+        { text: '🔱 Times', value: 'Times New Roman' },
+        { text: '🌺 Verdana', value: 'Verdana' },
+        { text: '💩 Sin sentido', value: 'Webdings' }
+    ];
+
+    const selectedFont = 'Comic Sans MS';
+    const fontSelectionInput = CardService.newSelectionInput()
+        .setType(CardService.SelectionInputType.DROPDOWN)
+        .setFieldName('font')
+        .setTitle('Tipo de letra')
+
+    fontOptions.forEach(option => {
+        const isSelected = option.value === selectedFont;
+        fontSelectionInput.addItem(option.text, option.value, isSelected);
+    });
+
+    const tags = [];
+    const width = '640';
+    const height = '480';
+    const catForm = CardService.newCardSection()
+        .setHeader('Opciones')
+        .addWidget(messageTextInput)
+        .setCollapsible(true)
+        .setNumUncollapsibleWidgets(2)
+        .addWidget(catTagsSelectionInput(20, 'tags', 'Características', tags))
+        .addWidget(sizeTextInput('width', 'Ancho', '¿Qué tan gordo el gato?', width))
+        .addWidget(sizeTextInput('height', 'Alto', '¿Qué tan alto el gato', height))
+        .addWidget(fontSelectionInput);
+
+    return CardService.newCardBuilder()
+        .setHeader(catHeader('¿Te gustan los gatos?', '¡Son preciosos!'))
+        .setPeekCardHeader(catHeader('Selección de gato', '¡Imágenes!', 'naranja', false))
+        .setFixedFooter(cardFooter())
+        .addSection(catForm)
+        .build();
 }
 
 /**
@@ -82,56 +145,8 @@ function driveSelectCard() {
         drivesSection.addWidget(widget);
     });
 
-    const url = 'https://cataas.com/api/tags';
-    const response = UrlFetchApp.fetch(url);
-    const jsonText = response.getContentText();
-    /** @type {[string]} */
-    const fullData = JSON.parse(jsonText);
-    const sampleSize = 20;
-    const sample = ['cute', 'kitten', 'orange', 'small'];
-    const lowercaseTracker = new Set(sample);
-
-    while (sample.length < sampleSize) {
-        const randomIndex = Math.floor(Math.random() * fullData.length);
-        const randomElement = fullData[randomIndex];
-        const lowercaseRandomElement = randomElement.toLowerCase();
-        if (!lowercaseTracker.has(lowercaseRandomElement)) {
-            sample.push(randomElement);
-            lowercaseTracker.add(lowercaseRandomElement);
-        }
-    }
-
-    sample.sort();
-
-    console.log(sample);
-
-    const selectionInput = CardService.newSelectionInput()
-        .setFieldName('tags')
-        .setType(CardService.SelectionInputType.MULTI_SELECT)
-        .setTitle('Cat Tag');
-
-    sample.forEach(tag => {
-        selectionInput.addMultiSelectItem(
-            capitalize(tag),
-            tag,
-            false,
-            '',
-            generateCuriousPhrase());
-        //selectionInput.addItem(tag, tag, false);
-    });
-
     const input2 = CardService.newCardSection()
-        .addWidget(CardService.newTextInput()
-            .setFieldName('test3')
-            .setTitle('Historia')
-            .setHint('Tu historia')
-            .setSuggestions(CardService.newSuggestions()
-                .addSuggestions(sample))
-            .setMultiline(true)
-            .setValidation(CardService.newValidation()
-                .setCharacterLimit(100)
-                .setInputType(CardService.InputType.TEXT)))
-        .addWidget(selectionInput)
+        .addWidget(catTagsSelectionInput(20, 'tags', 'Características'))
         .addWidget(CardService.newDateTimePicker()
             .setFieldName('test4')
             .setTitle('Cumpleaños')
