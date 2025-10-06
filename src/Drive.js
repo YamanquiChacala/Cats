@@ -7,7 +7,15 @@
 function onDriveHomepage(e) {
     console.log(e);
 
-    return catImageCard({});
+    /** @type {CatSelectionCardParams} */
+    const fakeContext = {
+        hostAppContext: {
+            driveFolderId: 'a8asdfjasdhyfa',
+        },
+        insertFunctionName: 'fake',
+    }
+
+    return catImageCard(fakeContext);
     return driveSelectCard();
 }
 
@@ -57,13 +65,37 @@ function catImageCard(params) {
     });
 
     const getNewCatButton = CardService.newTextButton()
-        .setText('¡A ver el gato!')
+        .setText(params.id ? '¡Nuevo 😺!' : '¡A ver el gato!')
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
         .setOnClickAction(CardService.newAction()
+            .addRequiredWidget('width')
+            .addRequiredWidget('height')
+            .addRequiredWidget('font')
             .setFunctionName(updateCatCallback.name)
-            .setParameters({ id: (params.id ?? '') }));
+            .setParameters({
+                hostAppContext: JSON.stringify(params.hostAppContext),
+                insertFunctionName: params.insertFunctionName,
+            }));
+
+    const updateCatButton = CardService.newTextButton()
+        .setText('¡Cambiar 💬!')
+        .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+        .setOnClickAction(CardService.newAction()
+            .addRequiredWidget('width')
+            .addRequiredWidget('height')
+            .addRequiredWidget('font')
+            .setFunctionName(updateCatCallback.name)
+            .setParameters({
+                hostAppContext: JSON.stringify(params.hostAppContext),
+                insertFunctionName: params.insertFunctionName,
+                id: (params.id ?? ''),
+            }));
 
     const buttons = CardService.newButtonSet().addButton(getNewCatButton);
+
+    if (params.id) {
+        buttons.addButton(updateCatButton);
+    }
 
     const catFormSection = CardService.newCardSection()
         .setHeader('Opciones')
@@ -85,8 +117,19 @@ function catImageCard(params) {
         .addSection(catButtonsSection);
 
     if (params.url) {
+        const insertCatButton = CardService.newTextButton()
+            .setText('😻 ¡Adoptar gato! 😹')
+            .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+            .setOnClickAction(CardService.newAction()
+                .setFunctionName(params.insertFunctionName)
+                .setParameters({
+                    hostAppContext: JSON.stringify(params.hostAppContext),
+                    insertFunctionName: params.insertFunctionName,
+                    url: params.url
+                }))
         card.addSection(CardService.newCardSection()
-            .addWidget(catImage(params.url, 'Miau')));
+            .addWidget(catImage(params.url, 'Miau'))
+            .addWidget(insertCatButton));
     }
 
     return card.build();
@@ -115,6 +158,8 @@ function updateCatCallback(e) {
 
     /** @type {CatSelectionCardParams} */
     const params = {
+        hostAppContext: JSON.parse(e.commonEventObject.parameters?.hostAppContext ?? '{}'),
+        insertFunctionName: e.commonEventObject.parameters?.insertFunctionName ?? '',
         id: e.commonEventObject.parameters?.id,
         message: e.commonEventObject.formInputs.message?.stringInputs.value[0],
         tags: e.commonEventObject.formInputs.tags?.stringInputs.value,
