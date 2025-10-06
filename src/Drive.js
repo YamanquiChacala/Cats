@@ -61,7 +61,7 @@ function catImageCard(params) {
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
         .setOnClickAction(CardService.newAction()
             .setFunctionName(updateCatCallback.name)
-            .setParameters({ id: params.id }));
+            .setParameters({ id: (params.id ?? '') }));
 
     const buttons = CardService.newButtonSet().addButton(getNewCatButton);
 
