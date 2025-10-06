@@ -115,6 +115,7 @@ function updateCatCallback(e) {
 
     /** @type {CatSelectionCardParams} */
     const params = {
+        id: e.commonEventObject.parameters?.id,
         message: e.commonEventObject.formInputs.message?.stringInputs.value[0],
         tags: e.commonEventObject.formInputs.tags?.stringInputs.value,
         height: e.commonEventObject.formInputs.height?.stringInputs.value[0],
@@ -127,7 +128,9 @@ function updateCatCallback(e) {
     const pathSegments = [];
     const queryParams = [];
 
-    if (params.tags && params.tags.length > 0) {
+    if (params.id) {
+        pathSegments.push(encodeURIComponent(params.id));
+    } else if (params.tags && params.tags.length > 0) {
         pathSegments.push(encodeURIComponent(params.tags.join(',')));
     }
 
