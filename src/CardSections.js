@@ -37,10 +37,23 @@ function cardFooter() {
  * @param {any} [altText] Tooltip text for the image
  * @return {GoogleAppsScript.Card_Service.Image} The image, ready to insert on a Card
  */
-function catImage(caption, altText) {
+function catImageWithCaption(caption, altText) {
     const now = new Date();
     const imageURL = `https://cataas.com/cat/says/${sanitize(caption)}?time=${now.getTime()}`;
     const image = CardService.newImage().setImageUrl(imageURL);
+    if (altText) {
+        image.setAltText(altText);
+    }
+    return image;
+}
+
+/**
+ * @param {string} url
+ * @param {string} altText
+ * @returns {GoogleAppsScript.Card_Service.Image} 
+ */
+function catImage(url, altText) {
+    const image = CardService.newImage().setImageUrl(url);
     if (altText) {
         image.setAltText(altText);
     }
@@ -52,7 +65,7 @@ function catImage(caption, altText) {
  * @param {string} text
  * @param {(...args: any[]) => GoogleAppsScript.Card_Service.Card} cardGenerator
  * @param {[...args: any[]]} [args]
- * @returns {GoogleAppsScript.Card_Service.TextButton} The button, reado to insert on a Card.
+ * @returns {GoogleAppsScript.Card_Service.TextButton} The button, ready to insert on a Card.
  */
 function reloadButton(text, cardGenerator, args = []) {
     const generatorName = cardGenerator.name
@@ -178,6 +191,7 @@ function handleOrderSwitch(e) {
  * @returns {GoogleAppsScript.Card_Service.SelectionInput}
  */
 function catTagsSelectionInput(howMany, fieldName, title, selectedTags = []) {
+    if (howMany < selectedTags.length) howMany = selectedTags.length;
     const url = 'https://cataas.com/api/tags';
     const response = UrlFetchApp.fetch(url);
     const jsonText = response.getContentText();
@@ -186,7 +200,7 @@ function catTagsSelectionInput(howMany, fieldName, title, selectedTags = []) {
     const sampleSize = howMany;
     const defaultTags = ['cute', 'kitten', 'orange', 'small'];
     const sample = Array.from(new Set([...selectedTags, ...defaultTags]))
-    const lowercaseTracker = new Set(sample);
+    const lowercaseTracker = new Set(sample.map(tag => tag.toLowerCase()));
 
     if (sample.length > sampleSize) {
         sample.splice(sampleSize);
@@ -206,7 +220,7 @@ function catTagsSelectionInput(howMany, fieldName, title, selectedTags = []) {
 
     const selectionInput = CardService.newSelectionInput()
         .setType(CardService.SelectionInputType.MULTI_SELECT)
-        .setMultiSelectMaxSelectedItems(Math.max(Math.floor(howMany / 4), 1))
+        .setMultiSelectMaxSelectedItems(Math.max(Math.max(Math.floor(howMany / 4), 1), selectedTags.length))
         .setMultiSelectMinQueryLength(2)
         .setFieldName(fieldName)
         .setType(CardService.SelectionInputType.MULTI_SELECT)
@@ -214,10 +228,11 @@ function catTagsSelectionInput(howMany, fieldName, title, selectedTags = []) {
 
 
     sample.forEach(tag => {
+        const selected = selectedTags.includes(tag);
         selectionInput.addMultiSelectItem(
             capitalize(tag),
             tag,
-            false,
+            selected,
             '',
             generateCuriousPhrase()
         );

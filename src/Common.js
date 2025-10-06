@@ -46,7 +46,7 @@ function onHomepage(e) {
 function createCatCard(text, requestFileAuth = false, isHomepage = false) {
     // Assemble the widgets and return the card.
     const section = CardService.newCardSection()
-        .addWidget(catImage(text, 'Miau'))
+        .addWidget(catImageWithCaption(text, 'Miau'))
         .addWidget(reloadButton('Nuevo gato', createCatCard, [text, requestFileAuth, isHomepage]));
 
     if (requestFileAuth) {

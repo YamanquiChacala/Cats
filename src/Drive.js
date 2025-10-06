@@ -7,18 +7,23 @@
 function onDriveHomepage(e) {
     console.log(e);
 
-    return catImageCard(e);
+    return catImageCard({});
     return driveSelectCard();
 }
 
 /**
  * 
- * @param {GoogleAppsScript.Addons.EventObject} e 
+ * @param {CatSelectionCardParams} params
  * @returns 
  */
-function catImageCard(e) {
+function catImageCard(params) {
 
-    const mensaje = '';
+    const mensaje = params.message || '';
+    const font = params.font || 'Comic Sans MS';
+    const tags = params.tags || [];
+    const width = params.width || '640';
+    const height = params.height || '480';
+
     const messageTextInput = CardService.newTextInput()
         .setFieldName('message')
         .setTitle('Mensaje')
@@ -26,7 +31,7 @@ function catImageCard(e) {
         .setValue(mensaje)
         .setValidation(CardService.newValidation()
             .setInputType(CardService.InputType.TEXT)
-            .setCharacterLimit(40));
+            .setCharacterLimit(MAX_CAPTION_LENGTH));
 
     const fontOptions = [
         { text: '🐵 Ándale', value: 'Andale Mono' },
@@ -41,35 +46,171 @@ function catImageCard(e) {
         { text: '💩 Sin sentido', value: 'Webdings' }
     ];
 
-    const selectedFont = 'Comic Sans MS';
     const fontSelectionInput = CardService.newSelectionInput()
         .setType(CardService.SelectionInputType.DROPDOWN)
         .setFieldName('font')
         .setTitle('Tipo de letra')
 
     fontOptions.forEach(option => {
-        const isSelected = option.value === selectedFont;
+        const isSelected = option.value === font;
         fontSelectionInput.addItem(option.text, option.value, isSelected);
     });
 
-    const tags = [];
-    const width = '640';
-    const height = '480';
-    const catForm = CardService.newCardSection()
+    const getNewCatButton = CardService.newTextButton()
+        .setText('¡A ver el gato!')
+        .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
+        .setOnClickAction(CardService.newAction()
+            .setFunctionName(updateCatCallback.name)
+            .setParameters({}));
+
+    const buttons = CardService.newButtonSet().addButton(getNewCatButton);
+
+    const catFormSection = CardService.newCardSection()
         .setHeader('Opciones')
-        .addWidget(messageTextInput)
         .setCollapsible(true)
         .setNumUncollapsibleWidgets(2)
+        .addWidget(messageTextInput)
         .addWidget(catTagsSelectionInput(20, 'tags', 'Características', tags))
         .addWidget(sizeTextInput('width', 'Ancho', '¿Qué tan gordo el gato?', width))
         .addWidget(sizeTextInput('height', 'Alto', '¿Qué tan alto el gato', height))
         .addWidget(fontSelectionInput);
 
-    return CardService.newCardBuilder()
+    const catButtonsSection = CardService.newCardSection().addWidget(buttons);
+
+    const card = CardService.newCardBuilder()
         .setHeader(catHeader('¿Te gustan los gatos?', '¡Son preciosos!'))
         .setPeekCardHeader(catHeader('Selección de gato', '¡Imágenes!', 'naranja', false))
         .setFixedFooter(cardFooter())
-        .addSection(catForm)
+        .addSection(catFormSection)
+        .addSection(catButtonsSection);
+
+    if (params.url) {
+        card.addSection(CardService.newCardSection()
+            .addWidget(catImage(params.url, 'Miau')));
+    }
+
+    return card.build();
+}
+
+/**
+ * 
+ * @param {GoogleAppsScript.Addons.EventObject} e 
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse}
+ */
+function updateCatCallback(e) {
+    console.log(e);
+
+    const validFonts = [
+        'Comic Sans MS',
+        'Andale Mono',
+        'Impact',
+        'Arial',
+        'Arial Black',
+        'Courier New',
+        'Georgia',
+        'Times New Roman',
+        'Verdana',
+        'Webdings'
+    ]
+
+    /** @type {CatSelectionCardParams} */
+    const params = {
+        message: e.commonEventObject.formInputs.message?.stringInputs.value[0],
+        tags: e.commonEventObject.formInputs.tags?.stringInputs.value,
+        height: e.commonEventObject.formInputs.height?.stringInputs.value[0],
+        width: e.commonEventObject.formInputs.width?.stringInputs.value[0],
+        font: e.commonEventObject.formInputs.font?.stringInputs.value[0],
+    }
+
+    const baseUrl = 'https://cataas.com/cat';
+    const baseParams = '?fit=contain&position=center&fontSize=30&fontColor=%23fff&fontBackground=%23000&json=true';
+    const pathSegments = [];
+    const queryParams = [];
+
+    if (params.tags && params.tags.length > 0) {
+        pathSegments.push(encodeURIComponent(params.tags.join(',')));
+    }
+
+    params.message = sanitize(params.message);
+    if (params.message) {
+        pathSegments.push('says', encodeURIComponent(params.message));
+    }
+
+    const minSize = 32;
+    const maxSize = 1024;
+
+    let height = parseInt(params.height, 10);
+    if (isNaN(height) || height < minSize || height > maxSize) {
+        height = 480;
+    }
+    params.height = height.toString();
+
+    let width = parseInt(params.width, 10);
+    if (isNaN(width) || width < minSize || width > maxSize) {
+        width = 640;
+    }
+    params.width = width.toString();
+
+    queryParams.push(`height=${height}`);
+    queryParams.push(`width=${width}`);
+
+    if (!validFonts.includes(params.font)) {
+        params.font = validFonts[0];
+    }
+
+    queryParams.push(`font=${encodeURIComponent(params.font)}`);
+
+    let requestUrl = baseUrl;
+
+    if (pathSegments.length > 0) {
+        requestUrl += '/' + pathSegments.join('/');
+    }
+
+    requestUrl += baseParams;
+
+    if (queryParams.length > 0) {
+        requestUrl += '&' + queryParams.join('&')
+    }
+
+    console.log('URL: ', requestUrl);
+
+    /** @type {CataasJsonReply} */
+    let data;
+
+    try {
+        const response = UrlFetchApp.fetch(requestUrl, { 'muteHttpExceptions': true });
+        const responseCode = response.getResponseCode();
+        const responseText = response.getContentText();
+
+        if (responseCode === 200) {
+            data = JSON.parse(responseText);
+        } else if (responseCode === 404 && responseText.includes('Cat not found')) {
+            return CardService.newActionResponseBuilder()
+                .setNotification(CardService.newNotification()
+                    .setText('😿 No existe un gato con esas características 🙀 ¿Por qué no quitas algunas? 😸'))
+                .build();
+        } else {
+            throw new Error(`Request failed with status ${responseCode}. Response: ${responseText}`);
+        }
+    } catch (e) {
+        console.error(e);
+
+        return CardService.newActionResponseBuilder()
+            .setNotification(CardService.newNotification()
+                .setText('😾 El gato no quiso venir 😿'))
+            .build();
+    }
+
+    console.log(data);
+
+    params.id = data.id;
+    params.tags = data.tags;
+    params.url = data.url;
+
+    const card = catImageCard(params);
+
+    return CardService.newActionResponseBuilder()
+        .setNavigation(CardService.newNavigation().updateCard(card))
         .build();
 }
 

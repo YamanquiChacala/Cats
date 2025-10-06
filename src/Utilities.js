@@ -5,16 +5,41 @@ const CARD_GENERATORS = {
 };
 
 /**
- * Ensure the caption is ready for a cat image.
+ * Ensures a caption is sanitized, formatted, and truncated for cataas.
+ * - Invalid characters are replaced with a single space.
+ * - If the caption exceeds MAX_CAPTION_LENGTH, it is cleanly truncated
+ *   at the last word boundary (space, hyphen, comma, etc.) and an ellipsis is added.
+ *
  * @param {string} caption The message to sanitize.
  * @return {string} The fixed message.
  */
 function sanitize(caption) {
-    if (caption.length > MAX_CAPTION_LENGTH) {
-        caption = caption.slice(0, MAX_CAPTION_LENGTH);
-        caption = caption.slice(0, regexLastIndexOf(caption, /[:;\-_.,\n ] */g)) + '...';
+    if (!caption) return '';
+
+    const invalidCharRegex = /[^\p{Script=Latin}\p{Script=Greek}\p{Script=Cyrillic}\p{Script=Hebrew}\p{Script=Arabic}0-9 .:,;¿?¡!\[\]\(\)\{\}~@#$%^`*+='"|\\\/_-]/gu;
+
+    let sanitizedCaption = caption.replace(invalidCharRegex, ' ').replace(/\s+/g, ' ').trim();
+
+    if (sanitizedCaption.length > MAX_CAPTION_LENGTH) {
+        const truncationPoint = MAX_CAPTION_LENGTH - 3;
+
+        const wordSeparatorRegex = /[:;_\-,\s]/;
+        let cutIndex = -1;
+
+        for (let i = truncationPoint; i >= 0; i--) {
+            if (wordSeparatorRegex.test(sanitizedCaption[i])) {
+                cutIndex = i;
+                break;
+            }
+        }
+
+        if (cutIndex === -1) {
+            cutIndex = truncationPoint;
+        }
+        sanitizedCaption = sanitizedCaption.slice(0, cutIndex) + '...';
     }
-    return encodeURIComponent(caption);
+
+    return sanitizedCaption;
 }
 
 /**
@@ -55,20 +80,6 @@ function generateCuriousPhrase() {
     ];
 
     return getRandomElement(structures);
-}
-
-/**
- * @param {string} str
- * @param {RegExp} regex
- */
-function regexLastIndexOf(str, regex) {
-    let lastIndex = -1;
-    const matches = str.matchAll(regex);
-
-    for (const match of matches) {
-        lastIndex = match.index;
-    }
-    return lastIndex;
 }
 
 const phraseParts = {
