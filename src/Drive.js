@@ -7,15 +7,15 @@
 function onDriveHomepage(e) {
     console.log(e);
 
-    /** @type {CatSelectionCardParams} */
-    const fakeContext = {
-        hostAppContext: {
-            driveFolderId: 'a8asdfjasdhyfa',
-        },
-        insertFunctionName: 'fake',
-    }
+    // /** @type {CatSelectionCardParams} */
+    // const fakeContext = {
+    //     hostAppContext: {
+    //         driveFolderId: 'a8asdfjasdhyfa',
+    //     },
+    //     insertFunctionName: 'fake',
+    // }
 
-    return catImageCard(fakeContext);
+    // return catImageCard(fakeContext);
     return driveSelectCard();
 }
 
@@ -334,40 +334,9 @@ function driveSelectCard() {
         drivesSection.addWidget(widget);
     });
 
-    const input2 = CardService.newCardSection()
-        .addWidget(catTagsSelectionInput(20, 'tags', 'Características'))
-        .addWidget(CardService.newDateTimePicker()
-            .setFieldName('test4')
-            .setTitle('Cumpleaños')
-            .setValueInMsSinceEpoch(Date.now())
-            .setTimeZoneOffsetInMins(-25200 / 60))
-
-    const input = CardService.newCardSection()
-        .addWidget(CardService.newTextInput()
-            .setFieldName('test')
-            .setTitle('Edad')
-            .setHint('Número entero')
-            .setValidation(CardService.newValidation()
-                .setCharacterLimit(10)
-                .setInputType(CardService.InputType.INTEGER)))
-        .addWidget(CardService.newSelectionInput()
-            .setFieldName('test2')
-            .setType(CardService.SelectionInputType.DROPDOWN)
-            .setTitle('Selecciona')
-            .addItem('opcion 1', 1, false)
-            .addItem('opcion 2', 'dos', true)
-            .addItem('opcion 3', false, false))
-        .addWidget(CardService.newTextButton()
-            .setText("Probar")
-            .setOnClickAction(CardService.newAction()
-                //.setAllWidgetsAreRequired(true)
-                .setFunctionName('testCallback')));
-
     return CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
         .addSection(drivesSection)
-        .addSection(input2)
-        .addSection(input)
         .setFixedFooter(cardFooter())
         .build();
 }
