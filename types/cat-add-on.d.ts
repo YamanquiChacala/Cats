@@ -1,7 +1,7 @@
 declare global {
 
     interface CatSelectionCardParams {
-        hostAppContext: { [key: string]: string };
+        hostAppContext: Record<string, string>;
         insertFunctionName: string;
         message?: string;
         tags?: string[];

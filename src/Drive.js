@@ -25,6 +25,7 @@ function onDriveHomepage(e) {
  * @returns 
  */
 function catImageCard(params) {
+    console.log(params);
 
     const mensaje = params.message || '';
     const font = params.font || 'Comic Sans MS';
@@ -124,7 +125,6 @@ function catImageCard(params) {
                 .setFunctionName(params.insertFunctionName)
                 .setParameters({
                     hostAppContext: JSON.stringify(params.hostAppContext),
-                    insertFunctionName: params.insertFunctionName,
                     url: params.url
                 }))
         card.addSection(CardService.newCardSection()
