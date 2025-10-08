@@ -16,7 +16,7 @@ function onDriveHomepage(e) {
     // }
 
     // return catImageCard(fakeContext);
-    return driveSelectCard();
+    return driveSelectCard(false);
 }
 
 /**
@@ -275,6 +275,11 @@ function onDriveItemsSelected(e) {
         supportsAllDrives: true,
         fields: 'name, driveId, parents, mimeType',
     }
+    // '0AESXdNQh4TSjUk9PVA' My Drive - no driveId
+    // 0AHqykuEEl-erUk9PVA El jardin - no parents
+    showFolder(e.drive.selectedItems[0].id, false);
+    //showFolder('0AESXdNQh4TSjUk9PVA');
+
 
     const selectedFileId = e.drive.selectedItems[0].id;
     const selectedFile = Drive.Files.get(selectedFileId, params)
@@ -297,15 +302,16 @@ function onDriveItemsSelected(e) {
         folderName = Drive.Files.get(parentId, { supportsAllDrives: true, fields: 'name' }).name;
     }
 
-    return folderSelectCard(parentId, driveId, folderName, driveName, false);
+    return folderSelectCard(parentId, driveId, folderName, driveName, undefined, false);
 }
 
 /**
  * Card for the user to selct the drive they want to use.
  * 
+ * @param {boolean} reverseOrder false: A-Z, true: Z-A
  * @returns {GoogleAppsScript.Card_Service.Card} A drive selection card.
  */
-function driveSelectCard() {
+function driveSelectCard(reverseOrder) {
     const myDriveWidget = CardService.newDecoratedText()
         .setText('Mi Unidad')
         .setBottomLabel('Disco personal')
@@ -314,13 +320,14 @@ function driveSelectCard() {
                 .setName('home_and_garden')))
         .setOnClickAction(CardService.newAction()
             .setFunctionName(showFolders.name)
-            .setParameters({ parentId: 'root', driveId: 'root', folderName: 'Mi Unidad', driveName: 'Mi Unidad', reverseOrder: 'false' }));
+            .setParameters({ parentId: 'root', driveId: 'root', folderName: 'Mi Unidad', driveName: 'Mi Unidad', reverseOrder: reverseOrder.toString() }));
 
     const drivesSection = CardService.newCardSection()
         .addWidget(myDriveWidget)
         .addWidget(CardService.newDivider())
 
-    const sharedDrives = Drive.Drives.list({ orderBy: 'name_natural' }).drives || [];
+    const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
+    const sharedDrives = Drive.Drives.list({ orderBy }).drives || [];
     sharedDrives.forEach((drive) => {
         const widget = CardService.newDecoratedText()
             .setText(drive.name)
@@ -330,7 +337,7 @@ function driveSelectCard() {
                     .setName('folder_shared')))
             .setOnClickAction(CardService.newAction()
                 .setFunctionName(showFolders.name)
-                .setParameters({ parentId: drive.id, driveId: drive.id, folderName: drive.name, driveName: drive.name, reverseOrder: 'false' }));
+                .setParameters({ parentId: drive.id, driveId: drive.id, folderName: drive.name, driveName: drive.name, reverseOrder: reverseOrder.toString() }));
         drivesSection.addWidget(widget);
     });
 
@@ -395,7 +402,7 @@ function testCallback(e) {
  * @param {boolean} reverseOrder false A-Z, true Z-A
  * @returns {GoogleAppsScript.Card_Service.Card}
  */
-function folderSelectCard(folderId, driveId, folderName, driveName, reverseOrder) {
+function folderSelectCard(folderId, driveId, folderName, driveName, parentId, reverseOrder) {
     const q = `trashed = false and '${folderId}' in parents`;
     const corpora = driveId === 'root' ? 'user' : 'drive'
     const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
@@ -413,7 +420,6 @@ function folderSelectCard(folderId, driveId, folderName, driveName, reverseOrder
     }
 
     const queryResult = Drive.Files.list(params)
-    const nextPageToken = queryResult.nextPageToken;
     const allFiles = queryResult.files;
 
     /** @type {GoogleAppsScript.Drive_v3.Drive.V3.Schema.File[]} */
@@ -498,10 +504,53 @@ function showFolders(e) {
     const driveName = e.commonEventObject.parameters.driveName;
     const reverseOrder = e.commonEventObject.parameters.reverseOrder === 'true';
 
-    const card = folderSelectCard(parentId, driveId, folderName, driveName, reverseOrder);
+    const card = folderSelectCard(parentId, driveId, folderName, driveName, null, reverseOrder);
 
     return CardService.newActionResponseBuilder()
         .setNavigation(CardService.newNavigation()
             .pushCard(card))
         .build();
+}
+
+/**
+ * @param {string} itemId
+ * @param {boolean} reverseOrder
+ * @returns {GoogleAppsScript.Card_Service.Card}
+ */
+function showFolder(itemId, reverseOrder) {
+
+    if (!itemId) {
+        return driveSelectCard(reverseOrder);
+    }
+
+    const params = {
+        supportsAllDrives: true,
+        fields: 'name, driveId, ownedByMe, parents, mimeType',
+    }
+    const item = Drive.Files.get(itemId, params);
+
+    console.log('Item: ', item);
+
+    // My Drive - no driveId, no parents - name: Mi Unidad
+    // Shared drive - no parents - name: drive
+    // item in My Drive - no driveId
+    // item in Shared drive - everything!
+    // shared item - no parents, ownedByMe false
+
+    if (item.ownedByMe === false) { // Shared with me file or foler.
+        return driveSelectCard(reverseOrder);
+    }
+
+    const isFolder = item.mimeType === 'application/vnd.google-apps.folder';
+
+    if (!isFolder) {
+        return showFolder(item.parents[0], reverseOrder);
+    }
+
+    let driveName = 'Mi Unidad';
+    if (item.driveId) {
+        driveName = Drive.Drives.get(item.driveId, { ...params, fields: 'name' }).name;
+    }
+
+    return folderSelectCard(itemId, item.driveId, item.name, driveName, item.parents?.[0], reverseOrder);
 }
