@@ -293,7 +293,7 @@ function onDriveItemsSelected(e) {
     let folderName = selectedFile.name;
 
     if (!isFolder) {
-        parentId = selectedFile.parents[0];
+        parentId = selectedFile.parents?.[0] ?? 'root';
         folderName = Drive.Files.get(parentId, { supportsAllDrives: true, fields: 'name' }).name;
     }
 
