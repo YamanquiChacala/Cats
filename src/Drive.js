@@ -279,7 +279,7 @@ function onDriveItemsSelected(e) {
     const selectedFileId = e.drive.selectedItems[0].id;
     const selectedFile = Drive.Files.get(selectedFileId, params)
 
-    const driveId = selectedFile.driveId || 'root';
+    const driveId = selectedFile.driveId ?? 'root';
 
     let driveName = 'Mi Unidad';
     if (driveId !== 'root') {
