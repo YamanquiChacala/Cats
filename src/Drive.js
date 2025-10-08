@@ -388,15 +388,15 @@ function testCallback(e) {
 /**
  * A card showing the folders of the given prent, so users can select one.
  * 
- * @param {string} parentId The folder being shown
+ * @param {string} folderId The folder being shown
  * @param {string} driveId The Drive the folder belongs to
  * @param {string} folderName The name of the folder being shown
  * @param {string} driveName The name of the Shared Drive
  * @param {boolean} reverseOrder false A-Z, true Z-A
  * @returns {GoogleAppsScript.Card_Service.Card}
  */
-function folderSelectCard(parentId, driveId, folderName, driveName, reverseOrder) {
-    const q = `trashed = false and '${parentId}' in parents`;
+function folderSelectCard(folderId, driveId, folderName, driveName, reverseOrder) {
+    const q = `trashed = false and '${folderId}' in parents`;
     const corpora = driveId === 'root' ? 'user' : 'drive'
     const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
     const params = {
@@ -462,7 +462,7 @@ function folderSelectCard(parentId, driveId, folderName, driveName, reverseOrder
     const card = CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
         .addSection(currentFolderSection)
-        .addSection(orderSection(parentId, driveId, folderName, reverseOrder))
+        .addSection(orderSection(folderId, driveId, folderName, reverseOrder))
         .setFixedFooter(cardFooter())
         .setPeekCardHeader(catHeader(folderName, `En ${driveName}`, 'naranja', false));
 
