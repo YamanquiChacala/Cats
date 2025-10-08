@@ -404,7 +404,7 @@ function testCallback(e) {
  */
 function folderSelectCard(folderId, driveId, folderName, driveName, parentId, reverseOrder) {
     const q = `trashed = false and '${folderId}' in parents`;
-    const corpora = driveId === 'root' ? 'user' : 'drive'
+    const corpora = driveId ? 'drive' : 'user';
     const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
     const params = {
         q,
@@ -415,7 +415,7 @@ function folderSelectCard(folderId, driveId, folderName, driveName, parentId, re
         supportsAllDrives: true,
         fields: 'files(name,id,driveId,mimeType),nextPageToken' //,capabilities(canRename,canEdit,canTrash,canAddChildren,canModifyContent,canRemoveChildren))'
     }
-    if (corpora === 'drive') {
+    if (driveId) {
         params.driveId = driveId;
     }
 
