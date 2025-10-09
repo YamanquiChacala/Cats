@@ -217,6 +217,13 @@ function folderSelectCard(folderId, driveId, folderName, driveName, parentId, re
                 .setFunctionName(navigateToFolderCallback.name)
                 .setParameters({ itemId: parentId, reverseOrder: reverseOrder.toString() })));
 
+    const addFileSection = CardService.newCardSection()
+        .addWidget(CardService.newTextButton()
+            .setText('Insertar Gato')
+            .setOnClickAction(CardService.newAction()
+                .setFunctionName(insertCatCallback.name)
+                .setParameters({ folderId })));
+
     const card = CardService.newCardBuilder()
         .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
         .addSection(currentFolderSection)
@@ -229,7 +236,42 @@ function folderSelectCard(folderId, driveId, folderName, driveName, parentId, re
         card.addSection(foldersSection)
     }
 
+    card.addSection(addFileSection);
+
     return card.build()
+}
+
+/**
+ * @param {GoogleAppsScript.Addons.EventObject} e
+ */
+function insertCatCallback(e) {
+    console.log(e);
+
+    const folderId = e.commonEventObject.parameters.folderId;
+
+    const imageUrl = 'https://cataas.com/cat'
+
+    const response = UrlFetchApp.fetch(imageUrl);
+    const imageBlob = response.getBlob();
+    const fileName = 'gato.png';
+
+    const fileMetadata = {
+        name: fileName,
+        parents: [folderId],
+        mimeType: MimeType.PNG,
+    };
+
+    const optionalArgs = {
+        supportsAllDrives: true,
+        uploadType: 'multipart',
+    };
+
+    Drive.Files.create(fileMetadata, imageBlob, optionalArgs);
+
+    return CardService.newActionResponseBuilder()
+        .setNotification(CardService.newNotification()
+            .setText('¡Gato añadido!'))
+        .build();
 }
 
 /**
