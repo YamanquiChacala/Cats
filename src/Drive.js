@@ -219,9 +219,10 @@ function folderSelectCard(folderId, driveId, folderName, driveName, parentId, re
 
     const addFileSection = CardService.newCardSection()
         .addWidget(CardService.newTextButton()
-            .setText('Insertar Gato')
+            .setText('¡Insertar 😻 aquí!')
+            .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
             .setOnClickAction(CardService.newAction()
-                .setFunctionName(insertCatCallback.name)
+                .setFunctionName(openCatSelectionCallback.name)
                 .setParameters({ folderId })));
 
     const card = CardService.newCardBuilder()
@@ -243,16 +244,57 @@ function folderSelectCard(folderId, driveId, folderName, driveName, parentId, re
 
 /**
  * @param {GoogleAppsScript.Addons.EventObject} e
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse}
  */
-function insertCatCallback(e) {
+function openCatSelectionCallback(e) {
     console.log(e);
 
     const folderId = e.commonEventObject.parameters.folderId;
 
-    const imageUrl = 'https://cataas.com/cat'
+    /** @type {CatSelectionCardParams} */
+    const params = {
+        hostAppContext: { folderId },
+        insertFunctionName: insertCatImageCallback.name
+    };
 
-    const response = UrlFetchApp.fetch(imageUrl);
-    const imageBlob = response.getBlob();
+    const card = catSelectionCard(params);
+
+    return CardService.newActionResponseBuilder()
+        .setNavigation(CardService.newNavigation()
+            .pushCard(card))
+        .build();
+}
+
+/**
+ * 
+ * @param {GoogleAppsScript.Addons.EventObject} e 
+ */
+function insertCatImageCallback(e) {
+    console.log(e);
+
+    const hostAppContextJSON = e.commonEventObject.parameters?.hostAppContext;
+    const imageUrl = e.commonEventObject.parameters?.imageUrl;
+
+    if (!hostAppContextJSON || !imageUrl) {
+        return CardService.newActionResponseBuilder()
+            .setNotification(CardService.newNotification()
+                .setText('Weird error, restart the app-on'))
+    }
+
+    const hostAppContext = JSON.parse(hostAppContextJSON);
+    const folderId = hostAppContext.folderId;
+
+    let imageBlob;
+
+    try {
+        const response = UrlFetchApp.fetch(imageUrl);
+        imageBlob = response.getBlob();
+    } catch (e) {
+        console.error(e);
+        return CardService.newActionResponseBuilder()
+            .setNotification(CardService.newNotification()
+                .setText('😾 El gato no quiso venir 😿'))
+    }
     const fileName = 'gato.png';
 
     const fileMetadata = {
@@ -275,11 +317,12 @@ function insertCatCallback(e) {
 }
 
 /**
+ * Card where the user can request a particular cat image.
  * 
  * @param {CatSelectionCardParams} params
  * @returns 
  */
-function catImageCard(params) {
+function catSelectionCard(params) {
     console.log(params);
 
     const mensaje = params.message || '';
@@ -380,7 +423,7 @@ function catImageCard(params) {
                 .setFunctionName(params.insertFunctionName)
                 .setParameters({
                     hostAppContext: JSON.stringify(params.hostAppContext),
-                    url: params.url
+                    imageUrl: params.url
                 }))
         card.addSection(CardService.newCardSection()
             .addWidget(catImage(params.url, 'Miau'))
@@ -510,53 +553,11 @@ function updateCatCallback(e) {
     params.tags = data.tags;
     params.url = data.url;
 
-    const card = catImageCard(params);
+    const card = catSelectionCard(params);
 
     return CardService.newActionResponseBuilder()
         .setNavigation(CardService.newNavigation().updateCard(card))
         .build();
 }
 
-
-/**
- * 
- * @param {GoogleAppsScript.Addons.EventObject} e 
- * @returns {GoogleAppsScript.Card_Service.SuggestionsResponse}
- */
-function provideCatTagsOptions(e) {
-    console.log(e);
-
-    const url = 'https://cataas.com/api/tags';
-    const response = UrlFetchApp.fetch(url);
-    const jsonText = response.getContentText();
-    /** @type {[string]} */
-    const fullData = JSON.parse(jsonText);
-
-    for (let i = fullData.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [fullData[i], fullData[j]] = [fullData[j], fullData[i]];
-    }
-
-    const sample = fullData.slice(0, 10);
-
-    const suggestions = CardService.newSuggestions().addSuggestions(sample);
-
-    return CardService.newSuggestionsResponseBuilder()
-        .setSuggestions(suggestions)
-        .build();
-}
-
-/**
- * 
- * @param {GoogleAppsScript.Addons.EventObject} e 
- */
-function testCallback(e) {
-    console.log(e);
-    console.log('Fecha y hora: ', e.commonEventObject.formInputs.test4.dateTimeInput);
-
-    return CardService.newActionResponseBuilder()
-        .setNotification(CardService.newNotification()
-            .setText('Respuesta del questionario'))
-        .build();
-}
 
