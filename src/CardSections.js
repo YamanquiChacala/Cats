@@ -39,7 +39,7 @@ function cardFooter() {
  */
 function catImageWithCaption(caption, altText) {
     const now = new Date();
-    const imageURL = `https://cataas.com/cat/says/${sanitize(caption)}?time=${now.getTime()}`;
+    const imageURL = `https://cataas.com/cat/says/${encodeURIComponent(sanitize(caption))}?time=${now.getTime()}`;
     const image = CardService.newImage().setImageUrl(imageURL);
     if (altText) {
         image.setAltText(altText);
@@ -130,34 +130,7 @@ function fileCountDecoratedText(fileCount) {
                 .setName(icon)));
 }
 
-/**
- * Drive widget to select ordering (A-Z) or (Z-A) for the list of folders.
- * 
- * @param {string} folderId
- * @param {boolean} reverseOrder Swap from A-Z to Z-A
- * @returns {GoogleAppsScript.Card_Service.CardSection} Widget showing the sort order A-Z or Z-A
- */
-function orderSection(folderId, reverseOrder) {
-    let orderText = 'A-Z';
-    let orderImage = 'arrow_downward';
-    if (reverseOrder) {
-        orderText = 'Z-A';
-        orderImage = 'arrow_upward';
-    }
 
-    const orderWidget = CardService.newDecoratedText()
-        .setText(`Orden: <b>${orderText}</b>`)
-        .setBottomLabel('<i>Selecciona para invertir</i>')
-        .setStartIcon(CardService.newIconImage().setMaterialIcon(CardService.newMaterialIcon()
-            .setName('format_line_spacing')))
-        .setEndIcon(CardService.newIconImage().setMaterialIcon(CardService.newMaterialIcon()
-            .setName(orderImage)
-            .setGrade(200)))
-        .setOnClickAction(CardService.newAction()
-            .setFunctionName(navigateToFolderCallback.name)
-            .setParameters({ itemId: folderId, reverseOrder: (!reverseOrder).toString() }));
-    return CardService.newCardSection().addWidget(orderWidget);
-}
 
 /**
  * Selection input with valid tags for cataas
