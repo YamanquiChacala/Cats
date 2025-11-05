@@ -1,5 +1,3 @@
-const MAX_CAPTION_LENGTH = 40;
-
 const CARD_GENERATORS = {
     createCatCard,
 };

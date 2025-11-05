@@ -3,8 +3,16 @@ declare global {
     interface FolderCardParams {
         itemId: string,
         reverseOrder: boolean,
+        callbackFunctionName: string, // Receives {folderId} on parameters.
+        callbackButtonText: string,
         headerParams: HeaderParams,
-        footerParams: FooterParams,
+    }
+
+    interface ItemParams {
+        name: string,
+        driveId?: string,
+        driveName: string,
+        parentId: string,
     }
 
     interface HeaderParams {
@@ -12,11 +20,6 @@ declare global {
         subtitle?: string,
         imageUrl: string,
         border: boolean,
-    }
-
-    interface FooterParams {
-        text: string,
-        url?: string,
     }
 }
 

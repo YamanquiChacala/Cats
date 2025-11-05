@@ -67,9 +67,9 @@ function createCatCard(text, requestFileAuth = false, isHomepage = false) {
     }
 
     const card = CardService.newCardBuilder()
-        .setHeader(catHeader('¡Aparece un gato!', '¿No es bonito?'))
+        .setHeader(getCatHeader_('¡Aparece un gato!', '¿No es bonito?'))
         .addSection(section)
-        .setFixedFooter(cardFooter());
+        .setFixedFooter(getCatFooter_());
 
 
 

@@ -1,36 +1,6 @@
-/**
- * @param {string} title The title on the header
- * @param {string} [subtitle] The subtitle on the header
- * @param {string} [icon] The name of the image to use as icon. A file called <icon>_48.png should exist in images folder.
- * @param {boolean} [circle] Crop the icon into a circle? Defaults to true.
- * @returns {GoogleAppsScript.Card_Service.CardHeader} The header, ready to insert on a Card
- */
-function catHeader(title, subtitle, icon = 'icon', circle = true) {
-    const imageURL = `https://media.githubusercontent.com/media/YamanquiChacala/Cats/refs/heads/main/images/${icon}_48.png`;
-    let imageStyle = CardService.ImageStyle.SQUARE;
-    if (circle) {
-        imageStyle = CardService.ImageStyle.CIRCLE;
-    }
-    const header = CardService.newCardHeader()
-        .setTitle(title)
-        .setImageUrl(imageURL)
-        .setImageStyle(imageStyle);
-    if (subtitle) {
-        header.setSubtitle(subtitle);
-    }
-    return header;
-}
 
-/**
- * @returns {GoogleAppsScript.Card_Service.FixedFooter} The Footer with the link to cataas
- */
-function cardFooter() {
-    return CardService.newFixedFooter()
-        .setPrimaryButton(CardService.newTextButton()
-            .setText('Maullando con cataas.com')
-            .setOpenLink(CardService.newOpenLink()
-                .setUrl('https://cataas.com')))
-}
+
+
 
 /**
  * @param {string} caption What the cat will say
@@ -132,86 +102,5 @@ function fileCountDecoratedText(fileCount) {
 
 
 
-/**
- * Selection input with valid tags for cataas
- * 
- * @param {number} howMany How many tags to display
- * @param {string} fieldName The identifier for the form
- * @param {string} title The title for the form
- * @param {string[]} [selectedTags] already selected tags
- * @returns {GoogleAppsScript.Card_Service.SelectionInput}
- */
-function catTagsSelectionInput(howMany, fieldName, title, selectedTags = []) {
-    if (howMany < selectedTags.length) howMany = selectedTags.length;
-    const url = 'https://cataas.com/api/tags';
-    const response = UrlFetchApp.fetch(url);
-    const jsonText = response.getContentText();
-    /** @type {[string]} */
-    const fullData = JSON.parse(jsonText);
-    const sampleSize = howMany;
-    const defaultTags = ['cute', 'kitten', 'orange', 'small'];
-    const sample = Array.from(new Set([...selectedTags, ...defaultTags]))
-    const lowercaseTracker = new Set(sample.map(tag => tag.toLowerCase()));
-
-    if (sample.length > sampleSize) {
-        sample.splice(sampleSize);
-    }
-
-    while (sample.length < sampleSize) {
-        const randomIndex = Math.floor(Math.random() * fullData.length);
-        const randomElement = fullData[randomIndex];
-        const lowercaseRandomElement = randomElement.toLowerCase();
-        if (!lowercaseTracker.has(lowercaseRandomElement)) {
-            sample.push(randomElement);
-            lowercaseTracker.add(lowercaseRandomElement);
-        }
-    }
-
-    sample.sort();
-
-    const selectionInput = CardService.newSelectionInput()
-        .setType(CardService.SelectionInputType.MULTI_SELECT)
-        .setMultiSelectMaxSelectedItems(Math.max(Math.max(Math.floor(howMany / 4), 1), selectedTags.length))
-        .setMultiSelectMinQueryLength(2)
-        .setFieldName(fieldName)
-        .setType(CardService.SelectionInputType.MULTI_SELECT)
-        .setTitle(title);
 
 
-    sample.forEach(tag => {
-        const selected = selectedTags.includes(tag);
-        selectionInput.addMultiSelectItem(
-            capitalize(tag),
-            tag,
-            selected,
-            '',
-            generateCuriousPhrase()
-        );
-    });
-
-    return selectionInput;
-}
-
-/**
- * A TextInput for integer sizes
- * @param {string} fieldName 
- * @param {string} title 
- * @param {string} hint 
- * @param {string} [value] 
- * @returns 
- */
-function sizeTextInput(fieldName, title, hint, value = '') {
-    const input = CardService.newTextInput()
-        .setFieldName(fieldName)
-        .setTitle(title)
-        .setHint(hint)
-        .setValidation(CardService.newValidation()
-            .setInputType(CardService.InputType.INTEGER)
-            .setCharacterLimit(4));
-
-    if (value) {
-        input.setValue(value);
-    }
-
-    return input;
-}

@@ -2,20 +2,20 @@
  * Returns a card showing the itemId folder (or its surrounding folder).
  * If no itemId, shows a card to select the drive.
  * 
- * @param {FolderCardParams} params
+ * @param {FolderCardParams} cardParams
  * @returns {GoogleAppsScript.Card_Service.Card}
  */
-function buildFolderCard(params) {
+function buildFolderCard(cardParams) {
 
-    if (!params.itemId) {
-        return BuildDriveSelectCard_(params);
+    if (!cardParams.itemId) {
+        return BuildDriveSelectCard_(cardParams);
     }
 
     const apiParams = {
         supportsAllDrives: true,
         fields: 'name, driveId, ownedByMe, parents, mimeType',
     }
-    const item = Drive.Files.get(itemId, apiParams);
+    const item = Drive.Files.get(cardParams.itemId, apiParams);
 
     console.log('Item: ', item);
 
@@ -26,13 +26,13 @@ function buildFolderCard(params) {
     // shared item - no parents, ownedByMe false
 
     if (item.ownedByMe === false) { // Shared with me file or foler.
-        return BuildDriveSelectCard_(reverseOrder);
+        return BuildDriveSelectCard_(cardParams);
     }
 
     const isFolder = item.mimeType === 'application/vnd.google-apps.folder';
 
     if (!isFolder) {
-        return buildFolderCard(item.parents[0], reverseOrder);
+        return buildFolderCard({ ...cardParams, itemId: item.parents[0] });
     }
 
     let driveName = 'Mi Unidad';
@@ -40,16 +40,25 @@ function buildFolderCard(params) {
         driveName = Drive.Drives.get(item.driveId, { ...apiParams, fields: 'name' }).name;
     }
 
-    return buildFolderSelectCard_(itemId, item.driveId, item.name, driveName, item.parents?.[0] ?? '', reverseOrder);
+    /** @type {ItemParams} */
+    const itemParams = {
+        name: item.name,
+        driveId: item.driveId,
+        driveName,
+        parentId: item.parents?.[0] ?? '',
+    }
+
+    return buildFolderSelectCard_(cardParams, itemParams);
 }
 
 /**
  * Card for the user to selct the drive they want to use.
  * 
- * @param {boolean} reverseOrder false: A-Z, true: Z-A
+ * @param {FolderCardParams} cardParams
  * @returns {GoogleAppsScript.Card_Service.Card} A drive selection card.
  */
-function BuildDriveSelectCard_(reverseOrder) {
+function BuildDriveSelectCard_(cardParams) {
+    const myDriveParams = { ...cardParams, itemId: 'root' };
     const myDriveWidget = CardService.newDecoratedText()
         .setText('Mi Unidad')
         .setBottomLabel('Disco personal')
@@ -58,15 +67,16 @@ function BuildDriveSelectCard_(reverseOrder) {
                 .setName('home_and_garden')))
         .setOnClickAction(CardService.newAction()
             .setFunctionName(handleNavigateToFolder.name)
-            .setParameters({ itemId: 'root', reverseOrder: reverseOrder.toString() }));
+            .setParameters({ cardParams: JSON.stringify(myDriveParams) }));
 
     const drivesSection = CardService.newCardSection()
         .addWidget(myDriveWidget)
         .addWidget(CardService.newDivider())
 
-    const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
+    const orderBy = 'name_natural' + (cardParams.reverseOrder ? ' desc' : '');
     const sharedDrives = Drive.Drives.list({ orderBy, fields: 'drives(id, name)' }).drives || [];
     sharedDrives.forEach((drive) => {
+        const driveParams = { ...cardParams, itemId: drive.id }
         const widget = CardService.newDecoratedText()
             .setText(drive.name)
             .setBottomLabel('Disco compartido')
@@ -75,33 +85,30 @@ function BuildDriveSelectCard_(reverseOrder) {
                     .setName('folder_shared')))
             .setOnClickAction(CardService.newAction()
                 .setFunctionName(handleNavigateToFolder.name)
-                .setParameters({ itemId: drive.id, reverseOrder: reverseOrder.toString() }));
+                .setParameters({ cardParams: JSON.stringify(driveParams) }));
         drivesSection.addWidget(widget);
     });
 
+    const orderParams = { ...cardParams, itemId: '' }
     return CardService.newCardBuilder()
-        .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
-        .addSection(getOrderSection_('', reverseOrder))
+        .setHeader(getHeader_(cardParams.headerParams))
+        .addSection(getOrderSection_(orderParams))
         .addSection(drivesSection)
-        .setFixedFooter(cardFooter())
+        .setPeekCardHeader(getPeekHeader_('Drives', 'En Google Drive', cardParams.headerParams.imageUrl))
         .build();
 }
 
 /**
  * A card showing the folders of the given prent, so users can select one.
  * 
- * @param {string} folderId The folder being shown
- * @param {string} driveId The Drive the folder belongs to
- * @param {string} folderName The name of the folder being shown
- * @param {string} driveName The name of the Shared Drive
- * @param {string} parentId The id of the parent of the foldr being shown. 
- * @param {boolean} reverseOrder false A-Z, true Z-A
+ * @param {FolderCardParams} cardParams
+ * @param {ItemParams} itemParams
  * @returns {GoogleAppsScript.Card_Service.Card}
  */
-function buildFolderSelectCard_(folderId, driveId, folderName, driveName, parentId, reverseOrder) {
-    const q = `trashed = false and '${folderId}' in parents`;
-    const corpora = driveId ? 'drive' : 'user';
-    const orderBy = 'name_natural' + (reverseOrder ? ' desc' : '');
+function buildFolderSelectCard_(cardParams, itemParams) {
+    const q = `trashed = false and '${cardParams.itemId}' in parents`;
+    const corpora = itemParams.driveId ? 'drive' : 'user';
+    const orderBy = 'name_natural' + (cardParams.reverseOrder ? ' desc' : '');
     const params = {
         q,
         corpora,
@@ -111,8 +118,8 @@ function buildFolderSelectCard_(folderId, driveId, folderName, driveName, parent
         supportsAllDrives: true,
         fields: 'files(name,id,mimeType),nextPageToken' //,capabilities(canRename,canEdit,canTrash,canAddChildren,canModifyContent,canRemoveChildren))'
     }
-    if (driveId) {
-        params.driveId = driveId;
+    if (itemParams.driveId) {
+        params.driveId = itemParams.driveId;
     }
 
     const queryResult = Drive.Files.list(params)
@@ -137,8 +144,8 @@ function buildFolderSelectCard_(folderId, driveId, folderName, driveName, parent
 
     const currentFolderSection = CardService.newCardSection()
         .addWidget(CardService.newDecoratedText()
-            .setText(`<b>${folderName}</b>`)
-            .setBottomLabel(`Carpeta en ${driveName}`)
+            .setText(`<b>${itemParams.name}</b>`)
+            .setBottomLabel(`Carpeta en ${itemParams.driveName}`)
             .setStartIcon(CardService.newIconImage()
                 .setMaterialIcon(CardService.newMaterialIcon()
                     .setName('folder_eye'))))
@@ -150,6 +157,7 @@ function buildFolderSelectCard_(folderId, driveId, folderName, driveName, parent
         .setHeader(`<b>${tooManyFolders ? 'Mas de' : ''}${folders.length} Carpeta${folders.length > 1 ? 's' : ''}</b>`);
 
     folders.forEach((folder) => {
+        const folderParams = { ...cardParams, itemId: folder.id }
         const widget = CardService.newDecoratedText()
             .setText(folder.name)
             .setStartIcon(CardService.newIconImage()
@@ -157,10 +165,11 @@ function buildFolderSelectCard_(folderId, driveId, folderName, driveName, parent
                     .setName('folder')))
             .setOnClickAction(CardService.newAction()
                 .setFunctionName(handleNavigateToFolder.name)
-                .setParameters({ itemId: folder.id, reverseOrder: reverseOrder.toString() }));
+                .setParameters({ cardParams: JSON.stringify(folderParams) }));
         foldersSection.addWidget(widget);
     });
 
+    const backParams = { ...cardParams, itemId: itemParams.parentId }
     const backSection = CardService.newCardSection()
         .addWidget(CardService.newDecoratedText()
             .setText('Regresar')
@@ -170,23 +179,22 @@ function buildFolderSelectCard_(folderId, driveId, folderName, driveName, parent
                     .setName('drive_folder_upload')))
             .setOnClickAction(CardService.newAction()
                 .setFunctionName(handleNavigateToFolder.name)
-                .setParameters({ itemId: parentId, reverseOrder: reverseOrder.toString() })));
+                .setParameters({ cardParams: JSON.stringify(backParams) })));
 
     const addFileSection = CardService.newCardSection()
         .addWidget(CardService.newTextButton()
-            .setText('¡Insertar 😻 aquí!')
+            .setText(cardParams.callbackButtonText)
             .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
             .setOnClickAction(CardService.newAction()
-                .setFunctionName(openCatSelectionCallback.name)
-                .setParameters({ folderId })));
+                .setFunctionName(cardParams.callbackFunctionName)
+                .setParameters({ folderId: cardParams.itemId })));
 
     const card = CardService.newCardBuilder()
-        .setHeader(catHeader('Elige una carpeta', '¡Que le guste al gato!'))
+        .setHeader(getHeader_(cardParams.headerParams))
         .addSection(currentFolderSection)
         .addSection(backSection)
-        .addSection(getOrderSection_(folderId, reverseOrder))
-        .setFixedFooter(cardFooter())
-        .setPeekCardHeader(catHeader(folderName, `En ${driveName}`, 'naranja', false));
+        .addSection(getOrderSection_(cardParams))
+        .setPeekCardHeader(getPeekHeader_(itemParams.name, `En ${itemParams.driveName}`, cardParams.headerParams.imageUrl))
 
     if (folders.length > 0) {
         card.addSection(foldersSection)
@@ -206,29 +214,63 @@ function buildFolderSelectCard_(folderId, driveId, folderName, driveName, parent
 function handleNavigateToFolder(e) {
     console.log(e);
 
-    const card = buildFolderCard(
-        e.commonEventObject.parameters?.itemId ?? '',
-        e.commonEventObject.parameters?.reverseOrder === 'true'
-    );
+    /** @type {FolderCardParams} */
+    const cardParams = JSON.parse(e.commonEventObject.parameters.cardParams);
+
+    const card = buildFolderCard(cardParams);
 
     return CardService.newActionResponseBuilder()
         .setNavigation(CardService.newNavigation()
-            .updateCard(card))
+            .pushCard(card))
         .build();
 }
 
+/**
+ * A Card header.
+ * @param {HeaderParams} headerParams 
+ * @returns {GoogleAppsScript.Card_Service.CardHeader}
+ */
+function getHeader_(headerParams) {
+    let imageStyle = CardService.ImageStyle.SQUARE;
+    if (headerParams.border) {
+        imageStyle = CardService.ImageStyle.CIRCLE;
+    }
+    const header = CardService.newCardHeader()
+        .setTitle(headerParams.title)
+        .setImageUrl(headerParams.imageUrl)
+        .setImageStyle(imageStyle);
+    if (headerParams.subtitle) {
+        header.setSubtitle(headerParams.subtitle);
+    }
+    return header;
+}
+
+/**
+ * A Peek Header.
+ * @param {string} title
+ * @param {string} subtitle
+ * @param {string} imageUrl
+ * @returns {GoogleAppsScript.Card_Service.CardHeader}
+ */
+function getPeekHeader_(title, subtitle, imageUrl) {
+    const header = CardService.newCardHeader()
+        .setTitle(title)
+        .setImageUrl(imageUrl)
+        .setSubtitle(subtitle)
+    return header;
+
+}
 
 /**
  * Drive widget to select ordering (A-Z) or (Z-A) for the list of folders.
  * 
- * @param {string} folderId
- * @param {boolean} reverseOrder Swap from A-Z to Z-A
+ * @param {FolderCardParams} cardParams
  * @returns {GoogleAppsScript.Card_Service.CardSection} Widget showing the sort order A-Z or Z-A
  */
-function getOrderSection_(folderId, reverseOrder) {
+function getOrderSection_(cardParams) {
     let orderText = 'A-Z';
     let orderImage = 'arrow_downward';
-    if (reverseOrder) {
+    if (cardParams.reverseOrder) {
         orderText = 'Z-A';
         orderImage = 'arrow_upward';
     }
@@ -243,6 +285,6 @@ function getOrderSection_(folderId, reverseOrder) {
             .setGrade(200)))
         .setOnClickAction(CardService.newAction()
             .setFunctionName(handleNavigateToFolder.name)
-            .setParameters({ itemId: folderId, reverseOrder: (!reverseOrder).toString() }));
+            .setParameters({ cardParams: JSON.stringify(cardParams) }));
     return CardService.newCardSection().addWidget(orderWidget);
 }
