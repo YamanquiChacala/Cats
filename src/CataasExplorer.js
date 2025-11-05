@@ -14,6 +14,16 @@ function buildCatSelectionCard(catParams) {
     const tags = catParams.tags || [];
     const width = catParams.width || '640';
     const height = catParams.height || '480';
+    const name = catParams.name || 'Gato';
+
+    const nameTextInput = CardService.newTextInput()
+        .setFieldName('name')
+        .setTitle('Nombre')
+        .setHint('¿Cómo se llama?')
+        .setValue(name)
+        .setValidation(CardService.newValidation()
+            .setInputType(CardService.InputType.TEXT)
+            .setCharacterLimit(MAX_CAPTION_LENGTH));
 
     const messageTextInput = CardService.newTextInput()
         .setFieldName('message')
@@ -83,7 +93,8 @@ function buildCatSelectionCard(catParams) {
     const catFormSection = CardService.newCardSection()
         .setHeader('Opciones')
         .setCollapsible(true)
-        .setNumUncollapsibleWidgets(2)
+        .setNumUncollapsibleWidgets(3)
+        .addWidget(nameTextInput)
         .addWidget(messageTextInput)
         .addWidget(getCatTagsSelectionInput_(20, 'tags', 'Características', tags))
         .addWidget(getSizeTextInput_('width', 'Ancho', '¿Qué tan gordo el gato?', width))

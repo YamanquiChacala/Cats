@@ -10,6 +10,7 @@ declare global {
         font?: string;
         id?: string;
         url?: string;
+        name?: string;
     }
 
     interface CataasJsonReply {

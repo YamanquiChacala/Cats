@@ -152,7 +152,7 @@ function buildFolderSelectCard_(cardParams, itemParams) {
         .addWidget(fileCountDecoratedText(otherFilesCount))
 
     const foldersSection = CardService.newCardSection()
-        .setCollapsible(true)
+        .setCollapsible(false)
         .setNumUncollapsibleWidgets(0)
         .setHeader(`<b>${tooManyFolders ? 'Mas de' : ''}${folders.length} Carpeta${folders.length > 1 ? 's' : ''}</b>`);
 
