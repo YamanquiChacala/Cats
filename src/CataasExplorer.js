@@ -61,6 +61,7 @@ function buildCatSelectionCard(catParams) {
         .setText(catParams.id ? '¡Nuevo 😺!' : '¡A ver el gato!')
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
         .setOnClickAction(CardService.newAction()
+            .addRequiredWidget('name')
             .addRequiredWidget('width')
             .addRequiredWidget('height')
             .addRequiredWidget('font')
@@ -74,6 +75,7 @@ function buildCatSelectionCard(catParams) {
         .setText('¡Cambiar 💬!')
         .setTextButtonStyle(CardService.TextButtonStyle.FILLED)
         .setOnClickAction(CardService.newAction()
+            .addRequiredWidget('name')
             .addRequiredWidget('width')
             .addRequiredWidget('height')
             .addRequiredWidget('font')
@@ -118,7 +120,8 @@ function buildCatSelectionCard(catParams) {
                 .setFunctionName(catParams.insertFunctionName)
                 .setParameters({
                     hostAppContext: JSON.stringify(catParams.hostAppContext),
-                    imageUrl: catParams.url
+                    catName: catParams.name,
+                    imageUrl: catParams.url,
                 }))
         card.addSection(CardService.newCardSection()
             .addWidget(catImage(catParams.url, 'Miau'))
@@ -159,6 +162,7 @@ function handleUpdateCat(e) {
         height: e.commonEventObject.formInputs.height?.stringInputs.value[0],
         width: e.commonEventObject.formInputs.width?.stringInputs.value[0],
         font: e.commonEventObject.formInputs.font?.stringInputs.value[0],
+        name: e.commonEventObject.formInputs.name?.stringInputs.value[0],
     }
 
     const baseUrl = 'https://cataas.com/cat';

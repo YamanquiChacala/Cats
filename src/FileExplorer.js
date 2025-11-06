@@ -221,7 +221,7 @@ function handleNavigateToFolder(e) {
 
     return CardService.newActionResponseBuilder()
         .setNavigation(CardService.newNavigation()
-            .pushCard(card))
+            .updateCard(card))
         .build();
 }
 
@@ -275,6 +275,9 @@ function getOrderSection_(cardParams) {
         orderImage = 'arrow_upward';
     }
 
+    /** @type {FolderCardParams} */
+    const newCardParams = { ...cardParams, reverseOrder: !cardParams.reverseOrder };
+
     const orderWidget = CardService.newDecoratedText()
         .setText(`Orden: <b>${orderText}</b>`)
         .setBottomLabel('<i>Selecciona para invertir</i>')
@@ -285,6 +288,6 @@ function getOrderSection_(cardParams) {
             .setGrade(200)))
         .setOnClickAction(CardService.newAction()
             .setFunctionName(handleNavigateToFolder.name)
-            .setParameters({ cardParams: JSON.stringify(cardParams) }));
+            .setParameters({ cardParams: JSON.stringify(newCardParams) }));
     return CardService.newCardSection().addWidget(orderWidget);
 }
