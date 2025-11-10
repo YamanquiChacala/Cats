@@ -1,5 +1,30 @@
 const MAX_CAPTION_LENGTH = 40;
 
+const DEFAULT_PARAMS = {
+    message: '',
+    tags: [],
+    font: 'Comic Sans MS',
+    fontSize: '30',
+    fontColor: '#fff',
+    fontBackground: '#000',
+    width: '640',
+    height: '480',
+    name: 'Gato',
+}
+
+const FONT_OPTIONS = [
+    { text: '💬 Comic', value: 'Comic Sans MS' },
+    { text: '🐵 Ándale', value: 'Andale Mono' },
+    { text: '💥 ¡Impacto!', value: 'Impact' },
+    { text: '💤 Arial', value: 'Arial' },
+    { text: '💤 Arial Negrillas', value: 'Arial Black' },
+    { text: '🤖 Courier', value: 'Courier New' },
+    { text: '🌹 Georgia', value: 'Georgia' },
+    { text: '🔱 Times', value: 'Times New Roman' },
+    { text: '🌺 Verdana', value: 'Verdana' },
+    { text: '💩 Sin sentido', value: 'Webdings' }
+];
+
 /**
  * Card where the user can request a particular cat image.
  * 
@@ -9,53 +34,29 @@ const MAX_CAPTION_LENGTH = 40;
 function buildCatSelectionCard(catParams) {
     console.log(catParams);
 
-    const message = catParams.message || '';
-    const font = catParams.font || 'Comic Sans MS';
-    const tags = catParams.tags || [];
-    const width = catParams.width || '640';
-    const height = catParams.height || '480';
-    const name = catParams.name || 'Gato';
-
-    const nameTextInput = CardService.newTextInput()
-        .setFieldName('name')
-        .setTitle('Nombre')
-        .setHint('¿Cómo se llama?')
-        .setValue(name)
-        .setValidation(CardService.newValidation()
-            .setInputType(CardService.InputType.TEXT)
-            .setCharacterLimit(MAX_CAPTION_LENGTH));
-
-    const messageTextInput = CardService.newTextInput()
-        .setFieldName('message')
-        .setTitle('Mensaje')
-        .setHint('¿Qué dice el gato?')
-        .setValue(message)
-        .setValidation(CardService.newValidation()
-            .setInputType(CardService.InputType.TEXT)
-            .setCharacterLimit(MAX_CAPTION_LENGTH));
-
-    const fontOptions = [
-        { text: '🐵 Ándale', value: 'Andale Mono' },
-        { text: '💥 ¡Impacto!', value: 'Impact' },
-        { text: '💤 Arial', value: 'Arial' },
-        { text: '💤 Arial Negrillas', value: 'Arial Black' },
-        { text: '💬 Comic', value: 'Comic Sans MS' },
-        { text: '🤖 Courier', value: 'Courier New' },
-        { text: '🌹 Georgia', value: 'Georgia' },
-        { text: '🔱 Times', value: 'Times New Roman' },
-        { text: '🌺 Verdana', value: 'Verdana' },
-        { text: '💩 Sin sentido', value: 'Webdings' }
-    ];
-
     const fontSelectionInput = CardService.newSelectionInput()
         .setType(CardService.SelectionInputType.DROPDOWN)
         .setFieldName('font')
         .setTitle('Tipo de letra')
 
-    fontOptions.forEach(option => {
-        const isSelected = option.value === font;
+    FONT_OPTIONS.forEach(option => {
+        const isSelected = option.value === catParams.font;
         fontSelectionInput.addItem(option.text, option.value, isSelected);
     });
+
+    const catFormSection = CardService.newCardSection()
+        .setHeader('Opciones')
+        .setCollapsible(true)
+        .setNumUncollapsibleWidgets(3)
+        .addWidget(getTextInput_('name', 'Nombre', '¿Cómo se llama?', catParams.name, CardService.InputType.TEXT, MAX_CAPTION_LENGTH))
+        .addWidget(getTextInput_('message', 'Mensaje', '¿Qué dice el gato?', catParams.message, CardService.InputType.TEXT, MAX_CAPTION_LENGTH))
+        .addWidget(getCatTagsSelectionInput_(20, 'tags', 'Características', catParams.tags))
+        .addWidget(getTextInput_('width', 'Ancho', '¿Qué tan gordo el gato?', catParams.width, CardService.InputType.INTEGER, 4))
+        .addWidget(getTextInput_('height', 'Alto', '¿Qué tan alto el gato', catParams.height, CardService.InputType.INTEGER, 4))
+        .addWidget(fontSelectionInput)
+        .addWidget(getTextInput_('fontSize', 'Tamaño del texto', '¿Qué tan grande?', catParams.fontSize, CardService.InputType.TEXT, 2))
+        .addWidget(getTextInput_('fontColor', 'Color del texto', 'RGB hexadecimal', catParams.fontColor, CardService.InputType.TEXT, 4))
+        .addWidget(getTextInput_('fontBackground', 'Color del fondo', 'RGB hexadecimal', catParams.fontBackground, CardService.InputType.TEXT, 4));
 
     const getNewCatButton = CardService.newTextButton()
         .setText(catParams.id ? '¡Nuevo 😺!' : '¡A ver el gato!')
@@ -65,6 +66,9 @@ function buildCatSelectionCard(catParams) {
             .addRequiredWidget('width')
             .addRequiredWidget('height')
             .addRequiredWidget('font')
+            .addRequiredWidget('fontSize')
+            .addRequiredWidget('fontColor')
+            .addRequiredWidget('fontBackground')
             .setFunctionName(handleUpdateCat.name)
             .setParameters({
                 hostAppContext: JSON.stringify(catParams.hostAppContext),
@@ -79,6 +83,9 @@ function buildCatSelectionCard(catParams) {
             .addRequiredWidget('width')
             .addRequiredWidget('height')
             .addRequiredWidget('font')
+            .addRequiredWidget('fontSize')
+            .addRequiredWidget('fontColor')
+            .addRequiredWidget('fontBackground')
             .setFunctionName(handleUpdateCat.name)
             .setParameters({
                 hostAppContext: JSON.stringify(catParams.hostAppContext),
@@ -91,17 +98,6 @@ function buildCatSelectionCard(catParams) {
     if (catParams.id) {
         buttons.addButton(updateCatButton);
     }
-
-    const catFormSection = CardService.newCardSection()
-        .setHeader('Opciones')
-        .setCollapsible(true)
-        .setNumUncollapsibleWidgets(3)
-        .addWidget(nameTextInput)
-        .addWidget(messageTextInput)
-        .addWidget(getCatTagsSelectionInput_(20, 'tags', 'Características', tags))
-        .addWidget(getSizeTextInput_('width', 'Ancho', '¿Qué tan gordo el gato?', width))
-        .addWidget(getSizeTextInput_('height', 'Alto', '¿Qué tan alto el gato', height))
-        .addWidget(fontSelectionInput);
 
     const catButtonsSection = CardService.newCardSection().addWidget(buttons);
 
@@ -139,19 +135,6 @@ function buildCatSelectionCard(catParams) {
 function handleUpdateCat(e) {
     console.log(e);
 
-    const validFonts = [
-        'Comic Sans MS',
-        'Andale Mono',
-        'Impact',
-        'Arial',
-        'Arial Black',
-        'Courier New',
-        'Georgia',
-        'Times New Roman',
-        'Verdana',
-        'Webdings'
-    ]
-
     /** @type {CatSelectionCardParams} */
     const params = {
         hostAppContext: JSON.parse(e.commonEventObject.parameters?.hostAppContext ?? '{}'),
@@ -162,11 +145,14 @@ function handleUpdateCat(e) {
         height: e.commonEventObject.formInputs.height?.stringInputs.value[0],
         width: e.commonEventObject.formInputs.width?.stringInputs.value[0],
         font: e.commonEventObject.formInputs.font?.stringInputs.value[0],
+        fontSize: e.commonEventObject.formInputs.fontSize?.stringInputs.value[0],
+        fontColor: e.commonEventObject.formInputs.fontColor?.stringInputs.value[0],
+        fontBackground: e.commonEventObject.formInputs.fontBackground?.stringInputs.value[0],
         name: e.commonEventObject.formInputs.name?.stringInputs.value[0],
     }
 
     const baseUrl = 'https://cataas.com/cat';
-    const baseParams = '?fit=contain&position=center&fontSize=30&fontColor=%23fff&fontBackground=%23000&json=true';
+    const baseParams = '?fit=contain&position=center&json=true';
     const pathSegments = [];
     const queryParams = [];
 
@@ -196,11 +182,16 @@ function handleUpdateCat(e) {
     }
     params.width = width.toString();
 
+    let fontSize = parseInt(params.fontSize, 10);
+
     queryParams.push(`height=${height}`);
     queryParams.push(`width=${width}`);
+    queryParams.push(`fontSize=${params.fontSize}`);
+    queryParams.push(`fontColor=${encodeURIComponent(params.fontColor)}`);
+    queryParams.push(`fontBackground=${encodeURIComponent(params.fontBackground)}`);
 
-    if (!validFonts.includes(params.font)) {
-        params.font = validFonts[0];
+    if (!FONT_OPTIONS.some(font => font.value === params.font)) {
+        params.font = FONT_OPTIONS[0].value;
     }
 
     queryParams.push(`font=${encodeURIComponent(params.font)}`);
@@ -324,23 +315,20 @@ function getCatTagsSelectionInput_(howMany, fieldName, title, selectedTags = [])
  * @param {string} fieldName 
  * @param {string} title 
  * @param {string} hint 
- * @param {string} [value] 
- * @returns 
+ * @param {string} value
+ * @param {GoogleAppsScript.Card_Service.InputType} inputType
+ * @param {GoogleAppsScript.Integer} charLimit
+ * @returns {GoogleAppsScript.Card_Service.TextInput}
  */
-function getSizeTextInput_(fieldName, title, hint, value = '') {
-    const input = CardService.newTextInput()
+function getTextInput_(fieldName, title, hint, value, inputType, charLimit) {
+    return CardService.newTextInput()
         .setFieldName(fieldName)
         .setTitle(title)
         .setHint(hint)
+        .setValue(value)
         .setValidation(CardService.newValidation()
-            .setInputType(CardService.InputType.INTEGER)
-            .setCharacterLimit(4));
-
-    if (value) {
-        input.setValue(value);
-    }
-
-    return input;
+            .setInputType(inputType)
+            .setCharacterLimit(charLimit));
 }
 
 /**

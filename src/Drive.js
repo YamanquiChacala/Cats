@@ -62,6 +62,7 @@ function handleFolderSelected(e) {
 
     /** @type {CatSelectionCardParams} */
     const params = {
+        ...DEFAULT_PARAMS,
         hostAppContext: { folderId },
         insertFunctionName: handleCatImageDriveInsert.name
     };
