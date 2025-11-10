@@ -48,9 +48,18 @@ function buildBasicCard(e) {
     console.log('Paragraph:\n', content.body.content[1].paragraph);
     console.log('Text:\n', content.body.content[1].paragraph.elements[0].textRun);
 
+    const action = CardService.newAction()
+        .setFunctionName(handleUpdateStyle.name)
+        .setParameters({ docId });
+
+    const button = CardService.newTextButton()
+        .setText('Cambiar formato')
+        .setOnClickAction(action);
+
     const section = CardService.newCardSection()
         .addWidget(CardService.newTextParagraph()
             .setText(`This file is named: ${fileName}`))
+        .addWidget(button);
     return CardService.newCardBuilder()
         .addSection(section)
         .build();
@@ -65,19 +74,40 @@ function buildBasicCard(e) {
 function handleAskPermission(e) {
     return CardService.newEditorFileScopeActionResponseBuilder()
         .requestFileScopeForActiveDocument()
-        .build()
+        .build();
 }
 
+/**
+ * 
+ * @param {GoogleAppsScript.Addons.EventObject} e 
+ * @returns {GoogleAppsScript.Card_Service.ActionResponse}
+ */
+function handleUpdateStyle(e) {
+    console.log(e);
+    const docId = e.commonEventObject.parameters.docId;
+
+    updateTextStyle(docId)
+
+    return CardService.newActionResponseBuilder()
+        .setNotification(CardService.newNotification()
+            .setText('Listo!'))
+        .build();
+}
+
+/**
+ * 
+ * @param {string} docId 
+ */
 function updateTextStyle(docId) {
     Docs.Documents.batchUpdate({
         requests: [
             {
                 updateTextStyle: {
-                    textStyle: { bold: true, },
-                    fields: 'bold',
+                    textStyle: { smallCaps: true },
+                    fields: 'smallCaps',
                     range: { startIndex: 1, endIndex: 21 },
                 }
             }
         ]
-    }, docId)
+    }, docId);
 }
